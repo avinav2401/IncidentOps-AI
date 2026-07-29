@@ -78,6 +78,7 @@ export async function login(email: string, password: string): Promise<AuthRespon
   
   return {
     access_token: data.session?.access_token || "",
+    token_type: data.session?.token_type || "bearer",
     user: {
       id: data.user.id,
       email: data.user.email || "",
