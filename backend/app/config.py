@@ -8,6 +8,7 @@ file.
 from __future__ import annotations
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import model_validator
 
 
 class Settings(BaseSettings):
@@ -26,7 +27,7 @@ class Settings(BaseSettings):
 
     # ── Runtime ────────────────────────────────────────────────────────
     app_env: str = "development"
-    demo_mode: bool = True
+    demo_mode: bool = False
     debug: bool = False
 
     # ── Database ───────────────────────────────────────────────────────
@@ -72,6 +73,12 @@ class Settings(BaseSettings):
     def is_sqlite(self) -> bool:
         return self.database_url.startswith("sqlite")
 
+    @model_validator(mode="after")
+    def validate_production_secrets(self) -> Settings:
+        if self.app_env == "production":
+            if self.jwt_secret_key == "change-this-before-production":
+                raise ValueError("JWT_SECRET_KEY must be changed in production!")
+        return self
 
 # Singleton — imported everywhere as ``from app.config import settings``.
 settings = Settings()

@@ -20,7 +20,7 @@ from app.models.jira_sync import JiraSync
 from app.models.recommendation import AIRecommendation
 from app.models.slack_message import SlackMessage
 from app.models.user import User
-from app.services.auth_service import hash_password
+
 
 
 def _utcnow() -> datetime:
@@ -42,9 +42,9 @@ def seed_database(db: Session) -> None:
 
     # ── Users ──────────────────────────────────────────────────────────
     users = [
-        User(id="usr_maya", name="Maya Chen", email="maya.chen@incidentops.dev", hashed_password=hash_password("demo123"), role="incident_commander", avatar_initials="MC"),
-        User(id="usr_samir", name="Samir Patel", email="samir.patel@incidentops.dev", hashed_password=hash_password("demo123"), role="responder", avatar_initials="SP"),
-        User(id="usr_lena", name="Lena Ortiz", email="lena.ortiz@incidentops.dev", hashed_password=hash_password("demo123"), role="admin", avatar_initials="LO"),
+        User(id="usr_maya", name="Maya Chen", email="maya.chen@incidentops.dev", role="incident_commander", avatar_initials="MC"),
+        User(id="usr_samir", name="Samir Patel", email="samir.patel@incidentops.dev", role="responder", avatar_initials="SP"),
+        User(id="usr_lena", name="Lena Ortiz", email="lena.ortiz@incidentops.dev", role="admin", avatar_initials="LO"),
     ]
     db.add_all(users)
 

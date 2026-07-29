@@ -47,6 +47,8 @@ def client():
 
     # Build the app without lifespan (we handle DB setup ourselves above).
     from app.main import create_app
+    from app.config import settings
+    settings.demo_mode = True
     app = create_app()
     app.dependency_overrides[get_db] = override_get_db
 
