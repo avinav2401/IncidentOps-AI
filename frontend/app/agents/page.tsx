@@ -1,6 +1,7 @@
-import { Activity, Bot, CheckCircle2, ChevronRight, CircleDashed, Clock3, Cpu, Radar, Sparkles } from "lucide-react";
+import { Activity, ChevronRight, CircleDashed, Clock3, Cpu, Radar, Sparkles } from "lucide-react";
 import { activityEvents, agents } from "@/lib/mock-data";
 import { AIIndicator, PageTitle } from "@/components/ui";
+import { AgentWorkflow } from "@/components/agent-workflow";
 
 const cardIcons = [Radar, Activity, CircleDashed, Sparkles];
 const cardTones = {
@@ -43,12 +44,12 @@ export default function AgentsPage() {
           </div>
         </div>
 
-        <aside className="panel p-5 sm:p-6">
+        <aside className="panel p-5 sm:p-6 flex flex-col">
           <div className="flex items-start justify-between"><div><h2 className="text-base font-semibold text-slate-100">Response loop</h2><p className="mt-1 text-xs text-slate-500">The handoff from signal to human decision.</p></div><Cpu size={18} className="text-violet-300" /></div>
-          <ol className="mt-7 space-y-0">
-            {["Observe telemetry", "Correlate evidence", "Rank root causes", "Prepare safe action", "Human approves"].map((step, index) => <li key={step} className="relative flex gap-3 pb-5 last:pb-0">{index < 4 && <span className="absolute left-3 top-7 h-[calc(100%-8px)] w-px bg-slate-700/55" />}<span className={`relative z-10 grid h-6 w-6 shrink-0 place-items-center rounded-full border text-[10px] font-semibold ${index < 4 ? "border-emerald-400/35 bg-emerald-400/10 text-emerald-200" : "border-sky-400/35 bg-sky-400/10 text-sky-200"}`}>{index < 4 ? <CheckCircle2 size={13} /> : "5"}</span><div className="pt-0.5"><p className="text-xs font-medium text-slate-300">{step}</p><p className="mt-1 text-[11px] leading-4 text-slate-600">{index === 4 ? "Approval is required before production changes run." : "Completed for the current critical incident."}</p></div></li>)}
-          </ol>
-          <div className="mt-6 rounded-xl border border-sky-400/15 bg-sky-400/[0.055] p-3.5"><div className="flex items-center gap-2 text-xs font-semibold text-sky-200"><Clock3 size={14} />Median agent assist</div><p className="mt-2 text-2xl font-semibold tracking-tight text-slate-100">4m 12s</p><p className="mt-1 text-[11px] text-slate-500">from detection to recommendation</p></div>
+          <div className="mt-7 flex-1 rounded-xl border border-slate-700/45 bg-slate-800/20 overflow-hidden">
+            <AgentWorkflow />
+          </div>
+          <div className="mt-6 rounded-xl border border-sky-400/15 bg-sky-400/[0.055] p-3.5 shrink-0"><div className="flex items-center gap-2 text-xs font-semibold text-sky-200"><Clock3 size={14} />Median agent assist</div><p className="mt-2 text-2xl font-semibold tracking-tight text-slate-100">4m 12s</p><p className="mt-1 text-[11px] text-slate-500">from detection to recommendation</p></div>
         </aside>
       </section>
     </div>

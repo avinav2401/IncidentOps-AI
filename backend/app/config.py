@@ -63,7 +63,11 @@ class Settings(BaseSettings):
     github_token: str = ""
     github_webhook_secret: str = ""
     pagerduty_webhook_secret: str = ""
+
+    # ── AI / LLM configuration ────────────────────────────────────────
     openai_api_key: str = ""
+    grok_api_key: str = ""
+    llm_provider: str = "openai"  # "openai" or "grok"
 
     # ── Derived helpers ────────────────────────────────────────────────
 

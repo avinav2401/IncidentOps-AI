@@ -16,6 +16,34 @@ IncidentOps AI turns the noisy first minutes of an outage into an auditable work
 - Captures operator decisions and lifecycle transitions in an immutable audit trail.
 - Surfaces operational analytics and agent health so teams can understand both incidents and the system investigating them.
 
+## Tech Stack
+
+**Frontend:**
+- Next.js 15 (App Router)
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+- Recharts (analytics visualization)
+- React Flow (agent workflow visualization)
+
+**Backend:**
+- FastAPI
+- PostgreSQL (via SQLAlchemy & Alembic)
+- Redis (optional for background jobs)
+- APScheduler (background tasks)
+- Pydantic (data validation)
+- Pytest (testing)
+- Ruff & Black (linting/formatting)
+
+**AI & Agents:**
+- Supported LLMs: OpenAI (GPT-4o) and xAI (Grok-2)
+- Tool Calling & Agent logic implemented via direct LLM orchestration (with `pyautogen` available as an extension point).
+
+**DevOps:**
+- Docker & Docker Compose
+- Nginx (reverse proxy in production)
+- GitHub Actions (CI/CD)
+
 ## Product flow
 
 ```mermaid
@@ -181,6 +209,9 @@ Copy [`.env.example`](.env.example) to `.env` to override Docker Compose default
 | --- | --- | --- |
 | `FRONTEND_PORT` / `BACKEND_PORT` | `3000` / `8000` | Host ports exposed by the web app and API. |
 | `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Public API base URL embedded in the Next.js build. |
+| `LLM_PROVIDER` | `openai` | Set to `openai` or `grok` to switch between LLM models. |
+| `OPENAI_API_KEY` | empty | API key for OpenAI GPT models. |
+| `GROK_API_KEY` | empty | API key for xAI Grok models. |
 | `APP_ENV` | `development` | Runtime environment label. |
 | `DEMO_MODE` | `true` | Keeps the workflow in safe seeded/demo behavior. |
 | `JWT_SECRET_KEY` | demo placeholder | Signing secret for API tokens. Replace it outside local development. |
