@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import Base, SessionLocal, engine
-from app.routers import agents, analytics, audit, auth, incidents, integrations
+from app.routers import agents, analytics, audit, auth, incidents, integrations, stream
 from app.seed import seed_database
 
 
@@ -77,7 +77,7 @@ def create_app() -> FastAPI:
 
     # Mount all routers — both versioned (/api/v1/...) and unversioned for
     # backward compatibility with the demo frontend.
-    all_routers = [auth.router, incidents.router, analytics.router, agents.router, audit.router, integrations.router]
+    all_routers = [auth.router, incidents.router, analytics.router, agents.router, audit.router, integrations.router, stream.router]
     for router in all_routers:
         application.include_router(router, prefix="/api/v1")
         application.include_router(router, include_in_schema=False)

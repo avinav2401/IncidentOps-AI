@@ -1,0 +1,42 @@
+# Gitleaks configuration for IncidentOps AI
+# See: https://github.com/gitleaks/gitleaks#configuration
+
+title = "IncidentOps AI Gitleaks Configuration"
+
+[extend]
+# Extend the default gitleaks config (catches AWS keys, GCP keys, etc.)
+useDefault = true
+
+[allowlist]
+# Paths that may contain example credentials (not real secrets)
+paths = [
+    # Example environment files
+    '''\.env\.example''',
+    '''frontend/\.env\.example''',
+
+    # Documentation files with example tokens/keys
+    '''docs/.*\.md''',
+    '''README\.md''',
+    '''backend/README\.md''',
+    '''SECURITY\.md''',
+    '''CONTRIBUTING\.md''',
+
+    # Test files with placeholder credentials
+    '''backend/tests/.*\.py''',
+
+    # Lock files
+    '''frontend/package-lock\.json''',
+
+    # Git attributes
+    '''\.gitattributes''',
+]
+
+regexes = [
+    # Our own demo/placeholder strings are not real secrets
+    '''change-this-before-production''',
+    '''replace-with-a-long-random-secret-before-production''',
+    '''incidentops_dev_password''',
+    '''ci-only-secret-not-for-production''',
+    '''placeholder-key''',
+    '''placeholder\.supabase\.co''',
+]

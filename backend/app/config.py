@@ -54,12 +54,15 @@ class Settings(BaseSettings):
     # ── Integration credentials (opt-in) ──────────────────────────────
     slack_webhook_url: str = ""
     slack_bot_token: str = ""
+    slack_signing_secret: str = ""
     slack_channel: str = ""
     jira_base_url: str = ""
     jira_email: str = ""
     jira_api_token: str = ""
     jira_project_key: str = ""
     github_token: str = ""
+    github_webhook_secret: str = ""
+    pagerduty_webhook_secret: str = ""
     openai_api_key: str = ""
 
     # ── Derived helpers ────────────────────────────────────────────────
