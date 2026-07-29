@@ -7,12 +7,11 @@ Architecture inspired by IncidentFox's production agent pipeline.
 
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -59,7 +58,7 @@ def _update_agent_status(db: Session, name: str, status: str) -> None:
     agent = db.query(AgentStatus).filter(AgentStatus.name == name).first()
     if agent:
         agent.status = status
-        agent.last_heartbeat = datetime.now(timezone.utc)
+        agent.last_heartbeat = datetime.now(UTC)
     else:
         db.add(
             AgentStatus(
@@ -67,7 +66,7 @@ def _update_agent_status(db: Session, name: str, status: str) -> None:
                 name=name,
                 purpose=f"AI pipeline agent: {name}",
                 status=status,
-                last_heartbeat=datetime.now(timezone.utc),
+                last_heartbeat=datetime.now(UTC),
             )
         )
     db.commit()

@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
+from app.agents.orchestrator import run_pipeline
 from app.database import get_db
 from app.middleware.auth import get_current_user
 from app.models.user import User
@@ -134,9 +135,6 @@ def resolve_incident(
     return IncidentRead.model_validate(incident)
 
 
-from fastapi import BackgroundTasks
-from app.agents.orchestrator import run_pipeline
-
 @router.post("/incidents/{incident_id}/analyze", summary="Trigger AI analysis pipeline")
 def trigger_ai_analysis(
     incident_id: str,
@@ -147,7 +145,7 @@ def trigger_ai_analysis(
     incident = svc.get_detail(db, incident_id)
     if not incident:
         raise _not_found(incident_id)
-    
+
     background_tasks.add_task(run_pipeline, incident_id)
     return {"message": "AI analysis started."}
 

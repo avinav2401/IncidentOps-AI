@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
+from app.models.audit_log import AuditLog
 from app.models.incident import Incident
 from app.models.incident_log import IncidentLog
-from app.models.audit_log import AuditLog
 from app.models.recommendation import AIRecommendation
 from app.schemas.incident import (
     ApprovalRequest,
@@ -22,7 +22,7 @@ from app.schemas.incident import (
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc).replace(microsecond=0)
+    return datetime.now(UTC).replace(microsecond=0)
 
 
 def _uid() -> str:
@@ -138,7 +138,7 @@ def get_detail(db: Session, incident_id: str) -> dict[str, Any] | None:
         .all()
     )
     base = incident.to_dict()
-    log_dicts = [l.to_dict() for l in logs]
+    log_dicts = [log.to_dict() for log in logs]
     return {
         **base,
         "incident": base,
@@ -331,7 +331,7 @@ def get_incident_logs(db: Session, incident_id: str) -> list[dict[str, Any]] | N
         .order_by(IncidentLog.created_at)
         .all()
     )
-    return [l.to_dict() for l in logs]
+    return [log.to_dict() for log in logs]
 
 
 # ── Audit ──────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import DateTime, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
@@ -24,7 +24,7 @@ class AuditLog(Base):
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
     metadata_raw: Mapped[str] = mapped_column("metadata", Text, nullable=False, default="{}")
 

@@ -20,7 +20,7 @@ UI can work without a real login flow during development.
 from __future__ import annotations
 
 import base64
-from typing import Callable
+from collections.abc import Callable
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer

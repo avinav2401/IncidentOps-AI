@@ -11,14 +11,13 @@ from __future__ import annotations
 import copy
 import json
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from threading import RLock
 from typing import Any
 from uuid import uuid4
 
-from .schemas import (
-    AIRecommendation,
+from .schemas.incident import (
     ApprovalRequest,
     IncidentCreate,
     IncidentState,
@@ -28,7 +27,7 @@ from .schemas import (
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc).replace(microsecond=0)
+    return datetime.now(UTC).replace(microsecond=0)
 
 
 def _timestamp(value: datetime) -> str:
@@ -38,9 +37,14 @@ def _timestamp(value: datetime) -> str:
 def _seed_state() -> dict[str, Any]:
     """Return fresh, realistic demo data relative to the current time."""
     now = utcnow()
-    minutes = lambda number: _timestamp(now - timedelta(minutes=number))
-    hours = lambda number: _timestamp(now - timedelta(hours=number))
-    days = lambda number: _timestamp(now - timedelta(days=number))
+    def minutes(number: int) -> str:
+        return _timestamp(now - timedelta(minutes=number))
+
+    def hours(number: int) -> str:
+        return _timestamp(now - timedelta(hours=number))
+
+    def days(number: int) -> str:
+        return _timestamp(now - timedelta(days=number))
 
     incidents = [
         {
@@ -258,7 +262,7 @@ class DemoStore:
         self._state = self._load_or_seed()
 
     @classmethod
-    def from_environment(cls) -> "DemoStore":
+    def from_environment(cls) -> DemoStore:
         return cls(os.getenv("INCIDENTOPS_DATA_FILE") or None)
 
     def _load_or_seed(self) -> dict[str, Any]:
@@ -582,7 +586,7 @@ class DemoStore:
                 "status": "delivered",
             }
             self._state["slack_messages"].append(item)
-            self._add_audit("integration", item["id"], "slack.tested", actor, f"Sent Slack test message to {item['channel']}.")
+            self._add_audit("integration", str(item["id"]), "slack.tested", actor, f"Sent Slack test message to {item['channel']}.")
             self._persist()
             return self._copy(item)
 
@@ -599,7 +603,7 @@ class DemoStore:
                 "summary": message or "IncidentOps AI Jira connection test",
             }
             self._state["jira_sync"].append(item)
-            self._add_audit("integration", item["id"], "jira.tested", actor, f"Created Jira test issue {item['issue_key']}.")
+            self._add_audit("integration", str(item["id"]), "jira.tested", actor, f"Created Jira test issue {item['issue_key']}.")
             self._persist()
             return self._copy(item)
 

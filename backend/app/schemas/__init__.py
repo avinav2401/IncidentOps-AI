@@ -1,9 +1,12 @@
 """Schema package — split for maintainability but re-exported for
 backward compatibility with ``from app.schemas import ...``."""
 
+from app.schemas.analytics import AnalyticsOverview
 from app.schemas.auth import LoginRequest, LoginResponse, UserRead
 from app.schemas.incident import (
+    AIRecommendationRead,
     ApprovalRequest,
+    AuditLogRead,
     IncidentCreate,
     IncidentDetail,
     IncidentListResponse,
@@ -11,11 +14,8 @@ from app.schemas.incident import (
     IncidentRead,
     IncidentUpdate,
     ResolutionRequest,
-    AIRecommendationRead,
-    AuditLogRead,
 )
 from app.schemas.integrations import IntegrationTestRequest
-from app.schemas.analytics import AnalyticsOverview
 
 # Legacy aliases so existing test_api.py continues to work.
 User = UserRead

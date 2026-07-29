@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
 import base64
 import time
 
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+
+from app.config import settings
 from app.database import get_db
-from app.schemas.auth import UserRead, LoginRequest, LoginResponse
 from app.middleware.auth import get_current_user
 from app.models.user import User
-from app.config import settings
+from app.schemas.auth import LoginRequest, LoginResponse, UserRead
 
 router = APIRouter(tags=["Authentication"])
 
@@ -20,15 +21,15 @@ router = APIRouter(tags=["Authentication"])
 def login(req: LoginRequest, db: Session = Depends(get_db)) -> LoginResponse:
     if not settings.demo_mode:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Login only available in demo mode (use Supabase).")
-    
+
     user = db.query(User).filter(User.email == req.email).first()
     if not user or req.password != "demo123":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    
+
     # Generate legacy demo token
     raw_token = f"incidentops-demo:{user.id}:{int(time.time())}"
     encoded = base64.urlsafe_b64encode(raw_token.encode()).decode().rstrip("=")
-    
+
     return LoginResponse(
         access_token=encoded,
         user=UserRead(

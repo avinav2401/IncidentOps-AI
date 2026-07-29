@@ -8,15 +8,12 @@ Adapted from IncidentFox's production SSE streaming architecture.
 from __future__ import annotations
 
 import asyncio
-import json
 from collections import defaultdict
-from typing import Any, AsyncGenerator
+from collections.abc import AsyncGenerator
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session
 
-from app.database import get_db
 from app.events import StreamEvent
 from app.middleware.auth import get_current_user
 from app.models.user import User
@@ -56,7 +53,7 @@ async def _event_generator(
                 yield "data: {\"type\": \"done\"}\n\n"
                 return
             yield event.to_sse()
-    except asyncio.TimeoutError:
+    except TimeoutError:
         yield "data: {\"type\": \"keepalive\"}\n\n"
     finally:
         # Unsubscribe

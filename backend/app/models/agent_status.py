@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import DateTime, Float, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column
@@ -21,7 +21,7 @@ class AgentStatus(Base):
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
     active_incidents: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     success_rate: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)

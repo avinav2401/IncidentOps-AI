@@ -2,6 +2,7 @@
 
 import asyncio
 
+
 async def determine_root_cause(log_summary: str, commits: list[str]) -> dict:
     """
     Simulates a Root Cause Agent synthesizing logs and commits into a hypothesis.

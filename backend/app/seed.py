@@ -7,8 +7,7 @@ SQLAlchemy ORM models and uses bcrypt-hashed passwords.
 
 from __future__ import annotations
 
-import json
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
@@ -22,9 +21,8 @@ from app.models.slack_message import SlackMessage
 from app.models.user import User
 
 
-
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc).replace(microsecond=0)
+    return datetime.now(UTC).replace(microsecond=0)
 
 
 def seed_database(db: Session) -> None:
@@ -72,7 +70,7 @@ def seed_database(db: Session) -> None:
             resolved_at=data.get("resolved_at"),
             resolution_summary=data.get("resolution_summary"),
         )
-        inc.tags = data["tags"]
+        inc.tags = data["tags"]  # type: ignore
         db.add(inc)
 
     # ── Incident Logs ──────────────────────────────────────────────────
@@ -87,7 +85,7 @@ def seed_database(db: Session) -> None:
     ]
     for lid, iid, etype, msg, actor, ts, meta in logs_data:
         log = IncidentLog(id=lid, incident_id=iid, event_type=etype, message=msg, actor=actor, created_at=ts)
-        log.metadata_dict = meta
+        log.metadata_dict = meta  # type: ignore
         db.add(log)
 
     # ── Audit Logs ─────────────────────────────────────────────────────
@@ -98,7 +96,7 @@ def seed_database(db: Session) -> None:
     ]
     for aid, etype, eid, action, actor, msg, ts, meta in audits_data:
         audit = AuditLog(id=aid, entity_type=etype, entity_id=eid, action=action, actor=actor, message=msg, created_at=ts)
-        audit.metadata_dict = meta
+        audit.metadata_dict = meta  # type: ignore
         db.add(audit)
 
     # ── AI Recommendations ─────────────────────────────────────────────
@@ -120,7 +118,7 @@ def seed_database(db: Session) -> None:
             approved_at=data.get("approved_at"),
             approved_by=data.get("approved_by"),
         )
-        rec.proposed_actions = data["proposed_actions"]
+        rec.proposed_actions = data["proposed_actions"]  # type: ignore
         db.add(rec)
 
     # ── Agent Status ───────────────────────────────────────────────────

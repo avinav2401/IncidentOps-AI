@@ -2,6 +2,7 @@
 
 import asyncio
 
+
 async def propose_recommendation(root_cause: dict) -> dict:
     """
     Simulates a Recommendation Agent proposing a fix based on the root cause.

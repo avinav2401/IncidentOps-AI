@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -12,7 +12,7 @@ from app.schemas.incident import IncidentState
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc).replace(microsecond=0)
+    return datetime.now(UTC).replace(microsecond=0)
 
 
 def compute_analytics(db: Session) -> dict[str, Any]:
@@ -44,7 +44,7 @@ def compute_analytics(db: Session) -> dict[str, Any]:
         if i.created_at:
             dt = i.created_at
             if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
+                dt = dt.replace(tzinfo=UTC)
             if dt >= now - timedelta(days=7):
                 created_this_week += 1
 

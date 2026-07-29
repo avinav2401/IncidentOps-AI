@@ -2,6 +2,7 @@
 
 import asyncio
 
+
 async def analyze_logs(incident_id: str, service: str) -> str:
     """
     Simulates a Log Analysis Agent pulling logs and generating a summary.

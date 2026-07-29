@@ -2,6 +2,7 @@
 
 import asyncio
 
+
 async def fetch_recent_commits(service: str) -> list[str]:
     """
     Simulates a GitHub Agent fetching recent commits for the affected service.
