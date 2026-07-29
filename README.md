@@ -9,10 +9,12 @@ IncidentOps AI turns the noisy first minutes of an outage into an auditable work
 - Tracks an incident from **Open** through **Investigating**, **Waiting Approval**, **Resolved**, and **Closed**.
 - Presents incident impact, evidence, timeline, owner, severity, and current action in one command center.
 - Orchestrates an agent-style investigation flow: monitor signal → log/GitHub context → root-cause hypothesis → recommendation → human approval → notification/ticket handoff.
-- Enforces role-aware workflows for **Admin**, **Incident Commander**, and **Responder** users with JWT-backed API access (with the same model extensible to SRE and Viewer roles).
-- Captures operator decisions and lifecycle transitions in an audit trail.
+- **Real-time Pipeline Tracking:** Uses Server-Sent Events (SSE) to stream agent thoughts, steps, and execution timings directly to the frontend.
+- **Production-grade Security:** Secret scanning with Gitleaks in CI, strict constant-time HMAC-SHA256 signature verification for inbound webhooks (GitHub, PagerDuty, Slack), and a formal `SECURITY.md` policy.
+- **Pluggable Output Handlers:** An extensible registry for posting incident resolutions, PR comments, and AI recommendations to external platforms like Slack and GitHub.
+- Enforces role-aware workflows for **Admin**, **Incident Commander**, and **Responder** users with JWT-backed API access.
+- Captures operator decisions and lifecycle transitions in an immutable audit trail.
 - Surfaces operational analytics and agent health so teams can understand both incidents and the system investigating them.
-- Provides Slack and Jira test handoffs that are safe by default; real integrations are opt-in through environment variables.
 
 ## Product flow
 
@@ -120,6 +122,19 @@ The demo is seeded with safe, fictional incident data.
 
 These credentials are deliberately low-security demo defaults. Do not reuse them, expose them, or enable demo mode in a real deployment.
 
+## How to Use It
+
+Once you have the app running locally via Docker or local development, follow these steps to experience the incident lifecycle workflow:
+
+1. **Log in:** Open <http://localhost:3000> and log in as an Incident Commander using `maya.chen@incidentops.dev` (Password: `demo123`).
+2. **View the Dashboard:** You will see a list of active and recent incidents in the command center.
+3. **Investigate an Incident:** Click on an active incident (e.g., "Checkout payment authorization failures") to view its evidence timeline.
+4. **Trigger AI Analysis:** Click the button to trigger the orchestrator pipeline.
+5. **Watch the Stream:** The UI will connect to the `/stream` endpoint and display real-time Server-Sent Events (SSE) as the Triage, Correlation, and Runbook agents process the incident.
+6. **Review and Approve:** Once the AI agents finish, a recommendation will be proposed. You can review the rationale, risk, and proposed actions, then click **Approve** or **Reject**.
+7. **Verify Outputs:** If you configured Slack and GitHub integration secrets in `.env`, the `OutputHandlerRegistry` will automatically dispatch the approved remediation plan to your configured channels and repositories.
+8. **Test Webhooks:** You can simulate incoming webhooks by sending HTTP POST requests to `/api/v1/webhooks/github` or `/api/v1/webhooks/pagerduty`. (Make sure to sign your requests with the correct HMAC-SHA256 signature if you have webhook secrets configured!).
+
 ## API at a glance
 
 `POST /login` is public. The remaining operational routes expect `Authorization: Bearer <token>`. The service also exposes the API namespace under `/api/v1` for clients that prefer versioned routes.
@@ -129,10 +144,14 @@ These credentials are deliberately low-security demo defaults. Do not reuse them
 | `POST` | `/login` | Exchange demo credentials for a JWT. |
 | `GET`, `POST` | `/incidents` | List incidents or create a new one. |
 | `GET` | `/incidents/{id}` | Read an incident, its evidence, and audit context. |
+| `POST` | `/incidents/{id}/analyze` | Trigger the AI orchestrator pipeline. |
+| `GET` | `/incidents/{id}/stream` | Stream real-time Server-Sent Events (SSE) from the AI pipeline. |
 | `POST` | `/incidents/{id}/approve` | Record a human approval for a recommendation. |
 | `POST` | `/incidents/{id}/resolve` | Resolve an incident and append the relevant audit event. |
 | `GET` | `/analytics` | Retrieve portfolio-level incident metrics. |
 | `GET` | `/agents/status` | Retrieve workflow-agent availability and health. |
+| `POST` | `/webhooks/github` | Receive GitHub webhooks with HMAC-SHA256 signature verification. |
+| `POST` | `/webhooks/pagerduty` | Receive PagerDuty V3 webhooks with HMAC-SHA256 signature verification. |
 | `POST` | `/slack/test` | Exercise the safe Slack handoff/test adapter. |
 | `POST` | `/jira/test` | Exercise the safe Jira handoff/test adapter. |
 | `GET` | `/health` | Container and platform health check. |
@@ -170,8 +189,11 @@ Copy [`.env.example`](.env.example) to `.env` to override Docker Compose default
 | `INCIDENTOPS_DATA_FILE` | `/app/data/incidentops.json` | Optional persisted location for the seeded demo backend. |
 | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | local demo values | PostgreSQL container configuration. |
 | `SLACK_WEBHOOK_URL`, `SLACK_BOT_TOKEN`, `SLACK_CHANNEL` | empty | Enables an explicit Slack integration configuration. |
+| `SLACK_SIGNING_SECRET` | empty | HMAC-SHA256 secret for verifying Slack webhook requests. |
 | `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`, `JIRA_PROJECT_KEY` | empty | Enables an explicit Jira integration configuration. |
 | `GITHUB_TOKEN` | empty | Enables authenticated GitHub context lookups when implemented. |
+| `GITHUB_WEBHOOK_SECRET` | empty | HMAC-SHA256 secret for verifying inbound GitHub webhooks. |
+| `PAGERDUTY_WEBHOOK_SECRET` | empty | HMAC-SHA256 secret for verifying inbound PagerDuty V3 webhooks. |
 
 ## Repository layout
 
