@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle2, ChevronRight, Clock3, ShieldAlert, Siren, Sparkles, TrendingDown, TrendingUp, Zap } from "lucide-react";
-import { activityEvents, weeklyLabels } from "@/lib/mock-data";
+import { activityEvents } from "@/lib/mock-data";
 import { AIIndicator, Avatar, MetricLink, PageTitle, SeverityBadge, StatusBadge } from "@/components/ui";
 import { fetchIncidents, fetchAnalytics } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -25,14 +25,16 @@ export default function DashboardPage() {
   });
 
   const activeIncidents = incidents.filter((incident) => incident.status !== "resolved").slice(0, 4);
-  const weeklyIncidents = analytics?.overview?.weekly_incidents || [0, 0, 0, 0, 0, 0, 0];
+  const trendData = analytics?.trend || [];
+  const weeklyIncidents = trendData.length ? trendData.map((t: any) => t.opened) : [0, 0, 0, 0, 0, 0, 0];
+  const weeklyChartLabels = trendData.length ? trendData.map((t: any) => t.label) : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const peak = Math.max(...weeklyIncidents, 1); // Avoid division by zero
 
   const dashboardMetrics = [
     { label: "Total incidents", value: analytics?.overview?.total_incidents?.toString() || "-", change: "This week" },
-    { label: "Critical", value: analytics?.by_severity?.critical?.toString() || "0", change: "Requires attention" },
-    { label: "Resolved today", value: analytics?.overview?.resolved_today?.toString() || "0", change: "Great job" },
-    { label: "Avg. resolution", value: "42 min", change: "-5 min from last week" },
+    { label: "Critical", value: analytics?.by_severity?.P1?.toString() || "0", change: "Requires attention" },
+    { label: "Resolved today", value: trendData.at(-1)?.resolved?.toString() || "0", change: "Great job" },
+    { label: "Avg. resolution", value: `${analytics?.overview?.mean_time_to_resolution_minutes || 0} min`, change: "Across all resolved" },
   ];
 
   if (loadingIncidents || loadingAnalytics) {
@@ -121,9 +123,9 @@ export default function DashboardPage() {
           <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-sm font-semibold text-slate-100">Incident volume</h2><p className="mt-1 text-xs text-slate-500">Last 7 days · all severities</p></div><div className="rounded-lg border border-emerald-400/15 bg-emerald-400/[0.06] px-2.5 py-1.5 text-xs font-medium text-emerald-200">−14% vs. last week</div></div>
           <div className="mt-8 flex h-36 items-end gap-3 sm:gap-5" aria-label="Weekly incident bar chart">
             {weeklyIncidents.map((value: number, index: number) => (
-              <div key={weeklyLabels[index]} className="group flex h-full min-w-0 flex-1 flex-col justify-end gap-2">
+              <div key={weeklyChartLabels[index] || index} className="group flex h-full min-w-0 flex-1 flex-col justify-end gap-2">
                 <div className="relative flex flex-1 items-end"><div className="absolute bottom-0 left-0 right-0 rounded-t-lg bg-sky-400/15" style={{ height: `${(value / peak) * 100}%` }} /><div className="relative z-10 w-full rounded-t-lg bg-gradient-to-t from-sky-500 to-cyan-300 transition duration-300 group-hover:from-sky-400 group-hover:to-sky-200" style={{ height: `${(value / peak) * 72}%` }} title={`${value} incidents`} /></div>
-                <span className="text-center text-[10px] text-slate-500">{weeklyLabels[index]}</span>
+                <span className="text-center text-[10px] text-slate-500">{weeklyChartLabels[index]}</span>
               </div>
             ))}
           </div>
