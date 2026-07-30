@@ -64,7 +64,7 @@ export interface Incident {
       risk: "Low" | "Medium" | "High";
       estimatedRecovery: string;
     };
-  };
+  } | null;
   auditHistory: AuditEvent[];
 }
 

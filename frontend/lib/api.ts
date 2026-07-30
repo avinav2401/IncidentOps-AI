@@ -1,7 +1,64 @@
-import type { Incident, AuthResponse, User } from "@/lib/types";
+import type { Incident, AuthResponse, User, Severity, IncidentStatus } from "@/lib/types";
 import { getIncident as getMockIncident, incidents as mockIncidents } from "@/lib/mock-data";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:8000";
+
+// --- Data Mapping Helpers ---
+
+const SEVERITY_MAP: Record<string, Severity> = {
+  p1: "critical", p2: "high", p3: "medium", p4: "low",
+  critical: "critical", high: "high", medium: "medium", low: "low",
+};
+
+const STATUS_MAP: Record<string, IncidentStatus> = {
+  investigating: "investigating",
+  mitigating: "mitigating",
+  monitoring: "monitoring",
+  resolved: "resolved",
+  closed: "resolved",
+  open: "investigating",
+  "waiting approval": "monitoring",
+};
+
+function mapSeverity(raw: string | undefined): Severity {
+  return SEVERITY_MAP[(raw || "").toLowerCase()] || "medium";
+}
+
+function mapStatus(raw: string | undefined): IncidentStatus {
+  return STATUS_MAP[(raw || "").toLowerCase()] || "investigating";
+}
+
+function formatDate(iso: string | undefined): string {
+  if (!iso) return "—";
+  try {
+    const date = new Date(iso);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMin = Math.floor(diffMs / 60_000);
+    if (diffMin < 1) return "Just now";
+    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffH = Math.floor(diffMin / 60);
+    if (diffH < 24) return `${diffH}h ago`;
+    const diffD = Math.floor(diffH / 24);
+    if (diffD < 7) return `${diffD}d ago`;
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  } catch {
+    return iso;
+  }
+}
+
+function computeDuration(createdAt: string | undefined, resolvedAt: string | null | undefined): string {
+  if (!createdAt) return "—";
+  const start = new Date(createdAt);
+  const end = resolvedAt ? new Date(resolvedAt) : new Date();
+  const diffMin = Math.floor((end.getTime() - start.getTime()) / 60_000);
+  if (diffMin < 60) return `${diffMin}m`;
+  const hours = Math.floor(diffMin / 60);
+  const mins = diffMin % 60;
+  if (hours < 24) return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ${hours % 24}h`;
+}
 
 // --- Auth Storage ---
 
@@ -132,16 +189,16 @@ export async function fetchIncidents(): Promise<Incident[]> {
   return items.map((inc: any) => ({
     id: inc.incident_number || inc.id,
     title: inc.title,
-    severity: inc.severity?.toLowerCase() || "medium",
+    severity: mapSeverity(inc.severity),
     service: inc.service,
-    status: inc.status?.toLowerCase() || "open",
+    status: mapStatus(inc.status),
     assignee: inc.owner || "Unassigned",
-    createdAt: inc.created_at,
-    updatedAt: inc.updated_at,
+    createdAt: formatDate(inc.created_at),
+    updatedAt: formatDate(inc.updated_at),
     description: inc.description,
     impact: inc.affected_users ? `${inc.affected_users} users` : "Unknown",
     affectedUsers: inc.affected_users ? `${inc.affected_users}` : "0",
-    duration: "Ongoing",
+    duration: computeDuration(inc.created_at, inc.resolved_at),
     tags: inc.tags || [],
     timeline: [],
     logs: [],
@@ -163,43 +220,43 @@ export async function fetchIncident(id: string): Promise<Incident | undefined> {
   return {
     id: inc.incident_number || inc.id,
     title: inc.title,
-    severity: inc.severity?.toLowerCase() || "medium",
+    severity: mapSeverity(inc.severity),
     service: inc.service,
-    status: inc.status?.toLowerCase() || "open",
+    status: mapStatus(inc.status),
     assignee: inc.owner || "Unassigned",
-    createdAt: inc.created_at,
-    updatedAt: inc.updated_at,
+    createdAt: formatDate(inc.created_at),
+    updatedAt: formatDate(inc.updated_at),
     description: inc.description,
     impact: inc.affected_users ? `${inc.affected_users} users` : "Unknown",
     affectedUsers: inc.affected_users ? `${inc.affected_users}` : "0",
-    duration: "Ongoing",
+    duration: computeDuration(inc.created_at, inc.resolved_at),
     tags: inc.tags || [],
     timeline: logs.map((l: any) => ({
-      time: l.created_at,
-      title: l.event_type,
+      time: formatDate(l.created_at),
+      title: l.event_type?.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
       description: l.message,
-      kind: l.actor?.includes("Agent") ? "ai" : "update"
+      kind: l.actor?.includes("Agent") ? "ai" as const : "update" as const
     })),
     logs: [],
     analysis: rec ? {
       confidence: rec.confidence,
       summary: rec.rationale,
-      signals: ["Log correlation", "Commit history"],
+      signals: rec.proposed_actions?.length ? rec.proposed_actions : ["Log correlation", "Commit history"],
       rootCause: rec.title,
       recommendation: {
         action: rec.title,
         rationale: rec.rationale,
-        risk: rec.risk,
+        risk: rec.risk as "Low" | "Medium" | "High",
         estimatedRecovery: "5m"
       }
     } : null,
     auditHistory: remote.audit_logs?.map((a: any) => ({
-      time: a.created_at,
+      time: formatDate(a.created_at),
       actor: a.actor,
       action: a.action,
       detail: a.message
     })) || []
-  } as unknown as Incident;
+  };
 }
 
 export async function triggerAnalysis(id: string): Promise<boolean> {

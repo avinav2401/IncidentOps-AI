@@ -33,7 +33,7 @@ export default function DashboardPage() {
   const dashboardMetrics = [
     { label: "Total incidents", value: analytics?.overview?.total_incidents?.toString() || "-", change: "This week" },
     { label: "Critical", value: analytics?.by_severity?.P1?.toString() || "0", change: "Requires attention" },
-    { label: "Resolved today", value: trendData.at(-1)?.resolved?.toString() || "0", change: "Great job" },
+    { label: "Resolved today", value: analytics?.overview?.resolved_incidents?.toString() || "0", change: "Great job" },
     { label: "Avg. resolution", value: `${analytics?.overview?.mean_time_to_resolution_minutes || 0} min`, change: "Across all resolved" },
   ];
 
