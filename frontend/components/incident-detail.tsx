@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, CheckCircle2, ChevronDown, CircleAlert, CircleCheck, Clock3, FileText, LoaderCircle, MessageSquare, ShieldCheck, Sparkles, ThumbsDown, ThumbsUp, X } from "lucide-react";
-import { triggerAnalysis, submitRecommendationDecision } from "@/lib/api";
+import { Check, CheckCircle2, ChevronDown, CircleAlert, CircleCheck, Clock3, ExternalLink, FileText, Hash, LoaderCircle, MessageSquare, Play, ShieldCheck, Sparkles, Terminal, ThumbsDown, ThumbsUp, X } from "lucide-react";
+import { triggerAnalysis, submitRecommendationDecision, fetchIncidentNotifications } from "@/lib/api";
 import type { Incident } from "@/lib/types";
 import { AIIndicator, Avatar, SeverityBadge, StatusBadge } from "@/components/ui";
 
@@ -27,6 +27,7 @@ export function IncidentDetail({ incident, onRefetch }: { incident: Incident, on
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
+  const [notifications, setNotifications] = useState<any>(null);
 
   const decide = async (nextDecision: "approved" | "rejected") => {
     setSaving(true);
@@ -51,7 +52,7 @@ export function IncidentDetail({ incident, onRefetch }: { incident: Incident, on
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
-    if (analyzing || incident.status === "investigating") {
+    if (analyzing || incident.status === "investigating" || incident.status === "executing") {
       interval = setInterval(() => {
         if (onRefetch) onRefetch();
       }, 3000);
@@ -60,6 +61,13 @@ export function IncidentDetail({ incident, onRefetch }: { incident: Incident, on
       if (interval) clearInterval(interval);
     };
   }, [analyzing, incident.status, onRefetch]);
+
+  // Fetch notifications when incident is resolved
+  useEffect(() => {
+    if (incident.status === "resolved" && !notifications) {
+      fetchIncidentNotifications(incident.id).then(setNotifications);
+    }
+  }, [incident.status, incident.id, notifications]);
 
   return (
     <div className="animate-enter">
@@ -133,6 +141,68 @@ export function IncidentDetail({ incident, onRefetch }: { incident: Incident, on
           <section className="panel p-5 sm:p-6 flex flex-col items-center justify-center text-slate-400">
             <Sparkles size={24} className="mb-3 text-violet-400/50" />
             <p className="text-sm">No AI analysis available yet. Trigger an analysis to begin.</p>
+          </section>
+        )}
+
+        {/* ── Execution & Verification Panel (Steps 11-12) ── */}
+        {incident.timeline.some((e) => e.description?.includes("Executed:") || e.description?.includes("kubectl")) && (
+          <section className="panel overflow-hidden" aria-labelledby="execution-heading">
+            <div className="flex items-start justify-between border-b border-slate-700/45 bg-gradient-to-r from-orange-400/[0.06] to-transparent px-5 py-5 sm:px-6">
+              <div>
+                <div className="flex items-center gap-2"><Terminal size={17} className="text-orange-300" /><h2 id="execution-heading" className="text-base font-semibold text-slate-100">Execution & Verification</h2></div>
+                <p className="mt-1.5 text-xs text-slate-400">Remediation command executed after human approval. Health verified by Monitor Agent.</p>
+              </div>
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1.5 text-xs font-semibold text-emerald-200"><CheckCircle2 size={13} />Verified</span>
+            </div>
+            <div className="p-5 sm:p-6 space-y-4">
+              {incident.timeline.filter((e) => e.description?.includes("Executed:") || e.description?.includes("kubectl")).map((e, i) => (
+                <div key={`exec-${i}`} className="rounded-xl border border-slate-700/45 bg-[#07121e]/70 p-4">
+                  <div className="flex items-center gap-2 text-xs font-medium text-orange-200 mb-2"><Play size={13} />Command Executed</div>
+                  <code className="block font-mono text-xs text-emerald-300 bg-slate-900/50 rounded-lg px-3 py-2">{e.description}</code>
+                </div>
+              ))}
+              {incident.timeline.filter((e) => e.description?.includes("Health:")).map((e, i) => (
+                <div key={`verify-${i}`} className="rounded-xl border border-emerald-400/15 bg-emerald-400/[0.04] p-4">
+                  <div className="flex items-center gap-2 text-xs font-medium text-emerald-200 mb-2"><ShieldCheck size={13} />Post-Fix Health Check</div>
+                  <p className="text-sm text-emerald-100/90">{e.description}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ── Notifications Panel (Steps 14-15) ── */}
+        {notifications && (notifications.slack_messages?.length > 0 || notifications.jira_tickets?.length > 0) && (
+          <section className="panel overflow-hidden" aria-labelledby="notifications-heading">
+            <div className="flex items-start justify-between border-b border-slate-700/45 px-5 py-5 sm:px-6">
+              <div>
+                <div className="flex items-center gap-2"><MessageSquare size={17} className="text-sky-300" /><h2 id="notifications-heading" className="text-base font-semibold text-slate-100">Notifications</h2></div>
+                <p className="mt-1.5 text-xs text-slate-400">Slack messages and Jira tickets created by the Communicator Agent.</p>
+              </div>
+              <AIIndicator label="Automated" />
+            </div>
+            <div className="p-5 sm:p-6 space-y-4">
+              {notifications.slack_messages?.map((msg: any) => (
+                <div key={msg.id} className="rounded-xl border border-slate-700/45 bg-[#07121e]/70 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="grid h-7 w-7 place-items-center rounded-lg bg-[#4A154B] text-white text-xs font-bold">#</span>
+                    <span className="text-xs font-medium text-slate-300">{msg.channel}</span>
+                    <span className="ml-auto rounded-md bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-200">{msg.status}</span>
+                  </div>
+                  <pre className="whitespace-pre-wrap text-xs leading-5 text-slate-400 font-mono">{msg.message}</pre>
+                </div>
+              ))}
+              {notifications.jira_tickets?.map((ticket: any) => (
+                <div key={ticket.id} className="rounded-xl border border-slate-700/45 bg-[#07121e]/70 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="grid h-7 w-7 place-items-center rounded-lg bg-[#0052CC] text-white text-xs font-bold">J</span>
+                    <span className="text-sm font-semibold text-sky-200">{ticket.issue_key}</span>
+                    <span className="ml-auto rounded-md bg-sky-400/10 px-2 py-0.5 text-[10px] font-medium text-sky-200">{ticket.status}</span>
+                  </div>
+                  <p className="text-xs text-slate-400">{ticket.summary}</p>
+                </div>
+              ))}
+            </div>
           </section>
         )}
 

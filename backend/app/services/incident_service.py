@@ -251,18 +251,10 @@ def approve(db: Session, incident_id: str, request: ApprovalRequest) -> tuple[di
         recommendation.status = "approved"
         recommendation.approved_at = now
         recommendation.approved_by = request.actor
-        incident.status = IncidentState.RESOLVED.value
-        incident.resolved_at = now
+        # Set to Executing — the post-approval pipeline will handle the rest
+        incident.status = IncidentState.EXECUTING.value
         message = f"Approved recommendation: {recommendation.title}."
         action = "recommendation.approved"
-        
-        # Simulated Execution Log
-        _add_log(db, real_id, "execution", "Executing command: kubectl rollout restart deployment", "System")
-        # Simulated Verification Log
-        _add_log(db, real_id, "verification", "Health: Healthy, CPU: 18%, Latency: 120ms, Errors: 0%", "Monitor Agent")
-        # Simulated Integration Logs
-        _add_log(db, real_id, "integration", "Sent Slack message: ✅ Incident Resolved", "Communicator Agent")
-        _add_log(db, real_id, "integration", "Created Jira ticket: Bug - Memory Leak", "Communicator Agent")
     else:
         recommendation.status = "rejected"
         if incident.status == IncidentState.WAITING_APPROVAL.value:
@@ -356,3 +348,36 @@ def audit_logs(
         )
     rows = q.order_by(AuditLog.created_at.desc()).limit(limit).all()
     return [r.to_dict() for r in rows]
+
+
+# ── Notifications ──────────────────────────────────────────────────────
+
+
+def get_notifications(db: Session, incident_id: str) -> dict[str, Any] | None:
+    """Return Slack messages and Jira tickets linked to an incident."""
+    from app.models.slack_message import SlackMessage
+    from app.models.jira_sync import JiraSync
+
+    incident = db.query(Incident).filter(
+        (Incident.id == incident_id) | (Incident.incident_number == incident_id)
+    ).first()
+    if not incident:
+        return None
+    real_id = incident.id
+    slack_messages = (
+        db.query(SlackMessage)
+        .filter(SlackMessage.incident_id == real_id)
+        .order_by(SlackMessage.sent_at.desc())
+        .all()
+    )
+    jira_tickets = (
+        db.query(JiraSync)
+        .filter(JiraSync.incident_id == real_id)
+        .order_by(JiraSync.synced_at.desc())
+        .all()
+    )
+    return {
+        "slack_messages": [m.to_dict() for m in slack_messages],
+        "jira_tickets": [t.to_dict() for t in jira_tickets],
+    }
+

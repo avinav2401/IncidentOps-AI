@@ -1,5 +1,5 @@
 export type Severity = "critical" | "high" | "medium" | "low";
-export type IncidentStatus = "investigating" | "mitigating" | "monitoring" | "resolved";
+export type IncidentStatus = "investigating" | "mitigating" | "monitoring" | "executing" | "resolved";
 export type AgentState = "Running" | "Completed" | "Thinking" | "Idle";
 
 export interface User {

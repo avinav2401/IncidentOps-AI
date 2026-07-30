@@ -6,14 +6,17 @@ import json
 from app.agents.llm import call_llm, parse_json_response
 
 
-async def determine_root_cause(log_summary: str, commits: list[str]) -> dict:
+async def determine_root_cause(log_summary: str, commits: list[str], monitor_data: dict, metrics_data: dict) -> dict:
     """
-    Uses an LLM to synthesize logs and commits into a root cause hypothesis.
+    Uses an LLM to synthesize logs, commits, monitor status, and metrics into a root cause hypothesis.
     """
     commits_str = "\n".join(commits)
     prompt = (
-        f"Based on the following log summary:\n{log_summary}\n\n"
-        f"And these recent commits:\n{commits_str}\n\n"
+        f"Based on the following evidence:\n"
+        f"- Monitor Status: {monitor_data.get('status')} ({monitor_data.get('details')})\n"
+        f"- Metrics: CPU {metrics_data.get('cpu')}, Memory {metrics_data.get('memory')}, Latency {metrics_data.get('latency')}\n"
+        f"- Log summary: {log_summary}\n"
+        f"- Recent commits:\n{commits_str}\n\n"
         "Provide a root cause hypothesis. Return ONLY a JSON object with 'hypothesis' (string) and 'confidence' (integer 0-100)."
     )
     

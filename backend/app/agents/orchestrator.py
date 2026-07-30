@@ -18,6 +18,8 @@ from sqlalchemy.orm import Session
 
 from app.agents.github_agent import fetch_recent_commits
 from app.agents.log_analysis_agent import analyze_logs
+from app.agents.metrics_agent import fetch_metrics
+from app.agents.monitor_agent import check_service_status
 from app.agents.recommendation_agent import propose_recommendation
 from app.agents.root_cause_agent import determine_root_cause
 from app.database import SessionLocal
@@ -112,79 +114,69 @@ async def run_pipeline(incident_id: str) -> None:
         incident.status = "Investigating"
         db.commit()
 
-        # ── Step 1: Log Analysis Agent ────────────────────────────────
+        # ── Step 1: Parallel Evidence Gathering ───────────────────────
         step_start = time.monotonic()
-        agent_name = "Log Analysis Agent"
+        
+        publish(thought_event(incident_id, "Gathering evidence from Monitor, Logs, Metrics, and GitHub..."))
 
-        publish(
-            agent_start_event(
-                incident_id,
-                agent_name,
-                description="Scanning recent logs for anomalies and error spikes.",
-            )
-        )
-        _update_agent_status(db, agent_name, "Running")
-        _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
+        async def run_monitor():
+            agent_name = "Monitor Agent"
+            publish(agent_start_event(incident_id, agent_name, description="Checking service health."))
+            _update_agent_status(db, agent_name, "Running")
+            _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
+            start_time = time.monotonic()
+            res = await check_service_status(incident.service)
+            dur = time.monotonic() - start_time
+            _add_incident_log(db, incident_id, f"Service Status: {res['status']}", agent_name)
+            _update_agent_status(db, agent_name, "Idle")
+            publish(agent_end_event(incident_id, agent_name, summary=f"Status: {res['status']}", duration_seconds=dur))
+            return res
 
-        log_summary = await analyze_logs(incident_id, incident.service)
+        async def run_metrics():
+            agent_name = "Metrics Agent"
+            publish(agent_start_event(incident_id, agent_name, description="Fetching APM metrics."))
+            _update_agent_status(db, agent_name, "Running")
+            _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
+            start_time = time.monotonic()
+            res = await fetch_metrics(incident.service)
+            dur = time.monotonic() - start_time
+            _add_incident_log(db, incident_id, f"Metrics: CPU {res['cpu']}, Mem {res['memory']}, Latency {res['latency']}", agent_name)
+            _update_agent_status(db, agent_name, "Idle")
+            publish(agent_end_event(incident_id, agent_name, summary=f"CPU: {res['cpu']}, Latency: {res['latency']}", duration_seconds=dur))
+            return res
 
-        step_duration = time.monotonic() - step_start
-        _add_incident_log(db, incident_id, log_summary, agent_name)
-        _update_agent_status(db, agent_name, "Idle")
-        publish(
-            agent_end_event(
-                incident_id,
-                agent_name,
-                summary=log_summary[:200],
-                duration_seconds=step_duration,
-            )
-        )
-        _structured_log(
-            "agent_step_completed",
-            agent=agent_name,
-            incident_id=incident_id,
-            duration_seconds=round(step_duration, 2),
-        )
+        async def run_logs():
+            agent_name = "Log Analysis Agent"
+            publish(agent_start_event(incident_id, agent_name, description="Scanning recent logs for anomalies."))
+            _update_agent_status(db, agent_name, "Running")
+            _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
+            start_time = time.monotonic()
+            res = await analyze_logs(incident_id, incident.service)
+            dur = time.monotonic() - start_time
+            _add_incident_log(db, incident_id, res, agent_name)
+            _update_agent_status(db, agent_name, "Idle")
+            publish(agent_end_event(incident_id, agent_name, summary=res[:200], duration_seconds=dur))
+            return res
+            
+        async def run_github():
+            agent_name = "GitHub Commit Agent"
+            publish(agent_start_event(incident_id, agent_name, description="Fetching recent commits."))
+            _update_agent_status(db, agent_name, "Running")
+            _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
+            start_time = time.monotonic()
+            res = await fetch_recent_commits(incident.service)
+            dur = time.monotonic() - start_time
+            _add_incident_log(db, incident_id, f"Found recent commits:\n" + "\n".join(res), agent_name)
+            _update_agent_status(db, agent_name, "Idle")
+            publish(agent_end_event(incident_id, agent_name, summary=f"Found {len(res)} recent commits.", duration_seconds=dur))
+            return res
 
-        # ── Step 2: GitHub Commit Agent ───────────────────────────────
-        step_start = time.monotonic()
-        agent_name = "GitHub Commit Agent"
-
-        publish(
-            agent_start_event(
-                incident_id,
-                agent_name,
-                description="Fetching recent commits for the affected service.",
-            )
-        )
-        _update_agent_status(db, agent_name, "Running")
-        _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
-
-        commits = await fetch_recent_commits(incident.service)
-        commits_str = "\n".join(commits)
-
-        step_duration = time.monotonic() - step_start
-        _add_incident_log(
-            db, incident_id, f"Found recent commits:\n{commits_str}", agent_name
-        )
-        _update_agent_status(db, agent_name, "Idle")
-        publish(
-            agent_end_event(
-                incident_id,
-                agent_name,
-                summary=f"Found {len(commits)} recent commits.",
-                duration_seconds=step_duration,
-            )
-        )
-        _structured_log(
-            "agent_step_completed",
-            agent=agent_name,
-            incident_id=incident_id,
-            commit_count=len(commits),
-            duration_seconds=round(step_duration, 2),
+        import asyncio
+        monitor_data, metrics_data, log_summary, commits = await asyncio.gather(
+            run_monitor(), run_metrics(), run_logs(), run_github()
         )
 
-        # ── Step 3: Root Cause Agent ──────────────────────────────────
+        # ── Step 2: Root Cause Agent ──────────────────────────────────
         step_start = time.monotonic()
         agent_name = "Root Cause Agent"
 
@@ -192,13 +184,13 @@ async def run_pipeline(incident_id: str) -> None:
             agent_start_event(
                 incident_id,
                 agent_name,
-                description="Synthesizing logs and commits to determine root cause.",
+                description="Synthesizing all evidence to determine root cause.",
             )
         )
         _update_agent_status(db, agent_name, "Running")
         _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
 
-        root_cause = await determine_root_cause(log_summary, commits)
+        root_cause = await determine_root_cause(log_summary, commits, monitor_data, metrics_data)
 
         step_duration = time.monotonic() - step_start
         _add_incident_log(

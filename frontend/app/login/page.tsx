@@ -86,6 +86,7 @@ export default function LoginPage() {
           <p>Demo accounts:</p>
           <p className="mt-1">maya.chen@incidentops.dev / demo123 (Commander)</p>
           <p>samir.patel@incidentops.dev / demo123 (Responder)</p>
+          <p>lena.ortiz@incidentops.dev / demo123 (Admin)</p>
         </div>
       </div>
     </div>

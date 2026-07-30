@@ -11,6 +11,7 @@ export const statusStyles: Record<IncidentStatus, string> = {
   investigating: "bg-amber-400/10 text-amber-200 ring-amber-400/20",
   mitigating: "bg-sky-400/10 text-sky-200 ring-sky-400/20",
   monitoring: "bg-violet-400/10 text-violet-200 ring-violet-400/20",
+  executing: "bg-orange-400/10 text-orange-200 ring-orange-400/20",
   resolved: "bg-emerald-400/10 text-emerald-200 ring-emerald-400/20",
 };
 

@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import logging
+
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.agents.orchestrator import run_pipeline
+from app.agents.post_approval_pipeline import run_post_approval_pipeline
 from app.database import get_db
 from app.middleware.auth import get_current_user
 from app.models.user import User
@@ -107,6 +110,7 @@ def get_incident_logs(
 def approve_incident(
     incident_id: str,
     payload: ApprovalRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     _user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
@@ -115,6 +119,16 @@ def approve_incident(
         raise _not_found(incident_id)
     incident, recommendation = result
     past_tense = "approved" if payload.decision == "approve" else "rejected"
+
+    # On approval, kick off the post-approval pipeline (execute → verify → notify → resolve)
+    if payload.decision == "approve":
+        background_tasks.add_task(
+            run_post_approval_pipeline,
+            incident["id"],
+            recommendation.get("title", "Apply fix"),
+            recommendation.get("rationale", "Unknown root cause"),
+        )
+
     return {
         "message": f"Recommendation {past_tense} successfully.",
         "incident": IncidentRead.model_validate(incident),
@@ -148,4 +162,16 @@ async def trigger_ai_analysis(
 
     background_tasks.add_task(run_pipeline, incident["id"])
     return {"message": "AI analysis started."}
+
+
+@router.get("/incidents/{incident_id}/notifications", summary="Get Slack and Jira notifications for an incident")
+def get_notifications(
+    incident_id: str,
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    result = svc.get_notifications(db, incident_id)
+    if result is None:
+        raise _not_found(incident_id)
+    return result
 

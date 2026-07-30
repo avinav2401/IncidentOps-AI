@@ -14,6 +14,7 @@ const STATUS_MAP: Record<string, IncidentStatus> = {
   investigating: "investigating",
   mitigating: "mitigating",
   monitoring: "monitoring",
+  executing: "executing",
   resolved: "resolved",
   closed: "resolved",
   open: "investigating",
@@ -307,4 +308,9 @@ export async function createIncident(data: { title: string; description: string;
 export async function fetchAnalytics(): Promise<any> {
   const remote = await request<any>("/analytics");
   return remote;
+}
+
+export async function fetchIncidentNotifications(id: string): Promise<any> {
+  const remote = await request<any>(`/incidents/${id}/notifications`);
+  return remote || { slack_messages: [], jira_tickets: [] };
 }

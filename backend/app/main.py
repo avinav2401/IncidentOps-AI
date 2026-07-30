@@ -77,7 +77,8 @@ def create_app() -> FastAPI:
 
     # Mount all routers — both versioned (/api/v1/...) and unversioned for
     # backward compatibility with the demo frontend.
-    all_routers = [auth.router, incidents.router, analytics.router, agents.router, audit.router, integrations.router, stream.router]
+    from app.routers import simulator
+    all_routers = [auth.router, incidents.router, analytics.router, agents.router, audit.router, integrations.router, stream.router, simulator.router]
     for router in all_routers:
         application.include_router(router, prefix="/api/v1")
         application.include_router(router, include_in_schema=False)

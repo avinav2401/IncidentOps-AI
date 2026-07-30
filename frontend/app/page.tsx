@@ -51,8 +51,26 @@ export default function DashboardPage() {
         eyebrow="On-call workspace"
         title={`Good morning, ${user?.name?.split(" ")[0] || "commander"}.`}
         description={`Here’s the operational picture across your services. ${activeIncidents.length} incidents need attention.`}
-        action={<Link href="/incidents" className="focus-ring inline-flex items-center justify-center gap-2 rounded-xl bg-sky-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-sky-300"><ShieldAlert size={16} />Review incidents</Link>}
-      />
+        action={
+          <div className="flex gap-3">
+            <button
+              onClick={async () => {
+                try {
+                  await fetch("http://localhost:8000/api/v1/simulator/trigger", { method: "POST" });
+                  window.location.reload();
+                } catch (e) {
+                  console.error(e);
+                }
+              }}
+              className="focus-ring inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700/60 bg-slate-800/35 px-4 py-2.5 text-sm font-semibold text-slate-300 transition hover:bg-slate-700/50"
+            >
+              <Zap size={16} /> Trigger Simulation
+            </button>
+            <Link href="/incidents" className="focus-ring inline-flex items-center justify-center gap-2 rounded-xl bg-sky-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-sky-300">
+              <ShieldAlert size={16} /> Review incidents
+            </Link>
+          </div>
+        }
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Incident overview statistics">
         {dashboardMetrics.map((metric, index) => {

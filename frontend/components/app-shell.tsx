@@ -17,6 +17,7 @@ import {
   Search,
   Settings,
   ShieldAlert,
+  Users,
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -65,6 +66,15 @@ function Navigation({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <div className="mt-auto space-y-1 border-t border-slate-700/50 pt-4">
+        <p className="eyebrow px-3 pb-2">Management</p>
+        <Link
+          href="/users"
+          onClick={onNavigate}
+          className={`focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${isActive("/users") ? "bg-sky-400/10 font-medium text-sky-100" : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-100"}`}
+        >
+          <Users size={18} strokeWidth={1.9} />
+          Users
+        </Link>
         <Link
           href="/settings"
           onClick={onNavigate}

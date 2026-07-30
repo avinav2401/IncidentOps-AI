@@ -71,7 +71,7 @@ def test_create_approve_resolve_and_audit_flow(client, auth_headers) -> None:
         headers=auth_headers,
     )
     assert approved.status_code == 200
-    assert approved.json()["incident"]["status"] == "Investigating"
+    assert approved.json()["incident"]["status"] == "Executing"
     assert approved.json()["recommendation"]["status"] == "approved"
 
     resolved = client.post(

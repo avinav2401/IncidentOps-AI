@@ -13,6 +13,7 @@ class IncidentState(str, Enum):
     OPEN = "Open"
     INVESTIGATING = "Investigating"
     WAITING_APPROVAL = "Waiting Approval"
+    EXECUTING = "Executing"
     RESOLVED = "Resolved"
     CLOSED = "Closed"
 
