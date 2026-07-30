@@ -277,6 +277,33 @@ export async function submitRecommendationDecision(id: string, decision: "approv
   return Boolean(remote) || !apiBase;
 }
 
+export async function createIncident(data: { title: string; description: string; service: string; severity?: string; owner?: string }): Promise<Incident | null> {
+  const remote = await request<any>("/incidents", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (!remote) return null;
+  return {
+    id: remote.incident_number || remote.id,
+    title: remote.title,
+    severity: mapSeverity(remote.severity),
+    service: remote.service,
+    status: mapStatus(remote.status),
+    assignee: remote.owner || "Unassigned",
+    createdAt: formatDate(remote.created_at),
+    updatedAt: formatDate(remote.updated_at),
+    description: remote.description,
+    impact: remote.affected_users ? `${remote.affected_users} users` : "Unknown",
+    affectedUsers: remote.affected_users ? `${remote.affected_users}` : "0",
+    duration: computeDuration(remote.created_at, remote.resolved_at),
+    tags: remote.tags || [],
+    timeline: [],
+    logs: [],
+    analysis: null,
+    auditHistory: []
+  };
+}
+
 export async function fetchAnalytics(): Promise<any> {
   const remote = await request<any>("/analytics");
   return remote;

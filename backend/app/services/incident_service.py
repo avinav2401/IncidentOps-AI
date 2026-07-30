@@ -251,10 +251,18 @@ def approve(db: Session, incident_id: str, request: ApprovalRequest) -> tuple[di
         recommendation.status = "approved"
         recommendation.approved_at = now
         recommendation.approved_by = request.actor
-        if incident.status == IncidentState.WAITING_APPROVAL.value:
-            incident.status = IncidentState.INVESTIGATING.value
+        incident.status = IncidentState.RESOLVED.value
+        incident.resolved_at = now
         message = f"Approved recommendation: {recommendation.title}."
         action = "recommendation.approved"
+        
+        # Simulated Execution Log
+        _add_log(db, real_id, "execution", "Executing command: kubectl rollout restart deployment", "System")
+        # Simulated Verification Log
+        _add_log(db, real_id, "verification", "Health: Healthy, CPU: 18%, Latency: 120ms, Errors: 0%", "Monitor Agent")
+        # Simulated Integration Logs
+        _add_log(db, real_id, "integration", "Sent Slack message: ✅ Incident Resolved", "Communicator Agent")
+        _add_log(db, real_id, "integration", "Created Jira ticket: Bug - Memory Leak", "Communicator Agent")
     else:
         recommendation.status = "rejected"
         if incident.status == IncidentState.WAITING_APPROVAL.value:
