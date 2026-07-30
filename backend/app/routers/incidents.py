@@ -146,6 +146,6 @@ def trigger_ai_analysis(
     if not incident:
         raise _not_found(incident_id)
 
-    background_tasks.add_task(run_pipeline, incident_id)
+    background_tasks.add_task(run_pipeline, incident["id"])
     return {"message": "AI analysis started."}
 

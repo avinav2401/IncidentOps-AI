@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Check, CheckCircle2, ChevronDown, CircleAlert, CircleCheck, Clock3, FileText, LoaderCircle, MessageSquare, ShieldCheck, Sparkles, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { triggerAnalysis, submitRecommendationDecision } from "@/lib/api";
 import type { Incident } from "@/lib/types";
@@ -41,8 +41,25 @@ export function IncidentDetail({ incident, onRefetch }: { incident: Incident, on
     setAnalyzing(true);
     await triggerAnalysis(incident.id);
     if (onRefetch) onRefetch();
-    setAnalyzing(false);
   };
+
+  useEffect(() => {
+    if (incident.analysis || incident.status !== "investigating") {
+      setAnalyzing(false);
+    }
+  }, [incident.analysis, incident.status]);
+
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (analyzing || incident.status === "investigating") {
+      interval = setInterval(() => {
+        if (onRefetch) onRefetch();
+      }, 3000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [analyzing, incident.status, onRefetch]);
 
   return (
     <div className="animate-enter">
@@ -57,9 +74,9 @@ export function IncidentDetail({ incident, onRefetch }: { incident: Incident, on
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {incident.status === "investigating" && (
-                <button disabled={analyzing || incident.status === "investigating"} onClick={handleTriggerAnalysis} className="focus-ring inline-flex items-center gap-2 rounded-xl bg-violet-500/20 px-3 py-2 text-xs font-medium text-violet-300 hover:bg-violet-500/30 disabled:opacity-50">
-                  {analyzing || incident.status === "investigating" ? <LoaderCircle size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                  {analyzing || incident.status === "investigating" ? "AI Analyzing..." : "Run AI Analysis"}
+                <button disabled={analyzing} onClick={handleTriggerAnalysis} className="focus-ring inline-flex items-center gap-2 rounded-xl bg-violet-500/20 px-3 py-2 text-xs font-medium text-violet-300 hover:bg-violet-500/30 disabled:opacity-50">
+                  {analyzing ? <LoaderCircle size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                  {analyzing ? "AI Analyzing..." : "Run AI Analysis"}
                 </button>
               )}
               <button className="focus-ring inline-flex items-center gap-2 rounded-xl border border-slate-700/60 bg-slate-900/45 px-3 py-2 text-xs font-medium text-slate-300 hover:border-slate-600 hover:text-white"><MessageSquare size={14} />Notes</button><button className="focus-ring grid h-9 w-9 place-items-center rounded-xl border border-slate-700/60 bg-slate-900/45 text-slate-400 hover:border-slate-600 hover:text-white" aria-label="More incident options"><ChevronDown size={17} /></button></div>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import {
   Activity,
   BarChart3,
@@ -88,6 +88,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { isAuthenticated, loading, user, logout } = useAuth();
   const router = useRouter();
 
+  useEffect(() => {
+    if (!loading && !isAuthenticated && pathname !== "/login") {
+      router.push("/login");
+    }
+  }, [isAuthenticated, loading, pathname, router]);
+
   if (pathname === "/login") {
     return <>{children}</>;
   }
@@ -103,7 +109,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   if (!isAuthenticated) {
-    router.push("/login");
     return null;
   }
 
