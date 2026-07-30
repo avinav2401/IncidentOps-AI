@@ -1,3 +1,5 @@
+"use client";
+
 import { Activity, ChevronRight, CircleDashed, Clock3, Cpu, Radar, Sparkles } from "lucide-react";
 import { activityEvents, agents } from "@/lib/mock-data";
 import { AIIndicator, PageTitle } from "@/components/ui";
@@ -18,7 +20,15 @@ export default function AgentsPage() {
         eyebrow="Autonomous response team"
         title="AI agents"
         description="Specialist agents observe, investigate, and prepare safe actions—while people retain the final say."
-        action={<button className="focus-ring inline-flex items-center justify-center gap-2 rounded-xl border border-violet-400/25 bg-violet-400/[0.08] px-4 py-2.5 text-sm font-semibold text-violet-200 transition hover:bg-violet-400/15"><Sparkles size={16} />Agent policies</button>}
+        action={
+          <button 
+            onClick={() => alert("Agent policies configuration is not available in this demo workspace.")}
+            className="focus-ring inline-flex items-center justify-center gap-2 rounded-xl border border-violet-400/25 bg-violet-400/[0.08] px-4 py-2.5 text-sm font-semibold text-violet-200 transition hover:bg-violet-400/15"
+          >
+            <Sparkles size={16} />
+            Agent policies
+          </button>
+        }
       />
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4" aria-label="AI agent status cards">

@@ -3,7 +3,6 @@
 import { useCallback } from "react";
 import {
   ReactFlow,
-  MiniMap,
   Controls,
   Background,
   useNodesState,
@@ -77,8 +76,7 @@ export function AgentWorkflow() {
         onConnect={onConnect}
         fitView
       >
-        <Controls style={{ background: "#0f172a", fill: "#94a3b8" }} />
-        <MiniMap nodeStrokeColor="#38bdf8" nodeColor="#1e293b" maskColor="rgba(15, 23, 42, 0.8)" />
+        <Controls style={{ background: "#0f172a", fill: "#94a3b8", border: "1px solid #334155" }} />
         <Background color="#334155" gap={16} />
       </ReactFlow>
     </div>

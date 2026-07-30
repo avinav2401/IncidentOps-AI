@@ -136,7 +136,7 @@ def resolve_incident(
 
 
 @router.post("/incidents/{incident_id}/analyze", summary="Trigger AI analysis pipeline")
-def trigger_ai_analysis(
+async def trigger_ai_analysis(
     incident_id: str,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
