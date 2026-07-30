@@ -207,7 +207,6 @@ export async function triggerAnalysis(id: string): Promise<boolean> {
   return !!remote;
 }
 export async function submitRecommendationDecision(id: string, decision: "approved" | "rejected", reason?: string): Promise<boolean> {
-  const user = getMe() || { name: "Demo User" }; // Fallback to avoid breaking
   // We don't have getMe as a synchronous call, let's just pass actor as optional
   const payload = { 
     decision: decision === "approved" ? "approve" : "reject",

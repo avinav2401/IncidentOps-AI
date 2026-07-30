@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else {
             removeToken();
           }
-        } catch (error) {
+        } catch {
           removeToken();
         }
       }

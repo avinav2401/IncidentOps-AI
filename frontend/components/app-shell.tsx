@@ -17,7 +17,6 @@ import {
   Search,
   Settings,
   ShieldAlert,
-  Sparkles,
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";

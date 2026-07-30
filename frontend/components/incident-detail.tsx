@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, CheckCircle2, ChevronDown, CircleAlert, CircleCheck, Clock3, FileText, LoaderCircle, MessageSquare, ShieldCheck, Sparkles, ThumbsDown, ThumbsUp, TriangleAlert, X } from "lucide-react";
+import { Check, CheckCircle2, ChevronDown, CircleAlert, CircleCheck, Clock3, FileText, LoaderCircle, MessageSquare, ShieldCheck, Sparkles, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { triggerAnalysis, submitRecommendationDecision } from "@/lib/api";
 import type { Incident } from "@/lib/types";
 import { AIIndicator, Avatar, SeverityBadge, StatusBadge } from "@/components/ui";

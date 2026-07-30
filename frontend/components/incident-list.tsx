@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight, ChevronDown, Filter, LoaderCircle, MoreHorizontal, RefreshCw, Search, SlidersHorizontal, X } from "lucide-react";
 import { fetchIncidents } from "@/lib/api";
-import { incidents as initialIncidents } from "@/lib/mock-data";
-import type { Incident, IncidentStatus, Severity } from "@/lib/types";
+import type { IncidentStatus, Severity } from "@/lib/types";
 import { Avatar, SeverityBadge, StatusBadge } from "@/components/ui";
 
 const severityOptions: Array<Severity | "all"> = ["all", "critical", "high", "medium", "low"];
@@ -30,7 +29,7 @@ export function IncidentList() {
   const [status, setStatus] = useState<IncidentStatus | "all">("all");
   const [service, setService] = useState("all");
 
-  const { data: records = [], isLoading: loading, refetch, isFetching } = useQuery({
+  const { data: records = [], refetch, isFetching } = useQuery({
     queryKey: ["incidents"],
     queryFn: fetchIncidents,
   });
