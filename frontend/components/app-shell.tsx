@@ -84,6 +84,8 @@ function Navigation({ onNavigate }: { onNavigate?: () => void }) {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const pathname = usePathname();
   const { isAuthenticated, loading, user, logout } = useAuth();
   const router = useRouter();
@@ -94,12 +96,21 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated, loading, pathname, router]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   if (pathname === "/login") {
     return <>{children}</>;
   }
 
-  // Optional: We can add an effect to redirect unauthenticated users
-  // But doing it here prevents flickering.
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#07111f]">
@@ -130,6 +141,21 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       )}
 
+      {searchOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-24 bg-slate-950/70 backdrop-blur-sm" onClick={() => setSearchOpen(false)}>
+          <div className="w-full max-w-xl rounded-xl border border-slate-700 bg-slate-900 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center px-4 py-3 border-b border-slate-800">
+              <Search size={18} className="text-slate-500" />
+              <input autoFocus placeholder="Search incidents, services, or commands..." className="w-full bg-transparent px-3 py-1 text-sm text-slate-200 outline-none placeholder:text-slate-500" />
+              <kbd className="hidden sm:inline-block rounded border border-slate-700 bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-400">ESC</kbd>
+            </div>
+            <div className="p-8 text-center text-xs text-slate-500">
+              No recent searches. Start typing to find resources.
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="min-w-0 lg:col-start-2">
         <header className="sticky top-0 z-20 flex h-[70px] items-center justify-between border-b border-slate-700/40 bg-[#07111f]/80 px-4 backdrop-blur-xl sm:px-7 lg:px-10">
           <div className="flex min-w-0 items-center gap-3">
@@ -144,15 +170,31 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <button className="focus-ring hidden h-9 items-center gap-2 rounded-lg border border-slate-700/60 bg-slate-900/45 px-3 text-xs text-slate-500 transition hover:border-slate-600 hover:text-slate-300 md:flex" aria-label="Search command center">
+            <button onClick={() => setSearchOpen(true)} className="focus-ring hidden h-9 items-center gap-2 rounded-lg border border-slate-700/60 bg-slate-900/45 px-3 text-xs text-slate-500 transition hover:border-slate-600 hover:text-slate-300 md:flex" aria-label="Search command center">
               <Search size={14} />
               <span>Search</span>
               <kbd className="rounded border border-slate-700 bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-400">⌘ K</kbd>
             </button>
-            <button className="focus-ring relative grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-100" aria-label="Notifications">
-              <Bell size={18} />
-              <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-rose-400 ring-2 ring-[#0b1725]" />
-            </button>
+            <div className="relative">
+              <button onClick={() => setNotifOpen(!notifOpen)} className="focus-ring relative grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-100" aria-label="Notifications">
+                <Bell size={18} />
+                <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-rose-400 ring-2 ring-[#0b1725]" />
+              </button>
+              {notifOpen && (
+                <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 rounded-xl border border-slate-700 bg-slate-900 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+                    <span className="text-sm font-semibold text-slate-200">Notifications</span>
+                    <button onClick={() => setNotifOpen(false)} className="text-xs text-sky-400 hover:text-sky-300">Mark all read</button>
+                  </div>
+                  <div className="p-6 text-center text-xs text-slate-500">
+                    <div className="mx-auto mb-2 grid h-10 w-10 place-items-center rounded-full bg-slate-800">
+                      <Bell size={16} className="text-slate-400" />
+                    </div>
+                    You're all caught up!
+                  </div>
+                </div>
+              )}
+            </div>
             <button 
               onClick={() => logout()}
               className="focus-ring flex items-center gap-2 rounded-lg py-1 pl-1 pr-0.5 text-left transition hover:bg-slate-800" 

@@ -51,7 +51,7 @@ async def call_llm(
     
     # Map models for Groq if selected
     if settings.llm_provider.lower() == "groq":
-        model = "llama-3.1-70b-versatile"
+        model = "llama-3.3-70b-versatile"
         
     client = get_llm_client(settings)
     
