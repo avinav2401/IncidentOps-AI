@@ -64,6 +64,32 @@ async function request<T>(path: string, init?: RequestInit): Promise<T | undefin
 import { supabase } from "./supabase";
 
 export async function login(email: string, password: string): Promise<AuthResponse> {
+  const url = apiBase ? `${apiBase}/login` : "";
+  if (url) {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (response.ok) {
+        const data = await response.json() as AuthResponse;
+        if (data.access_token) {
+          setToken(data.access_token);
+        }
+        return data;
+      } else if (response.status === 401 || response.status === 400) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || "Invalid email or password");
+      }
+    } catch (err: any) {
+      if (err.message !== "Failed to fetch" && err.message !== "fetch failed") {
+        throw err;
+      }
+      console.warn("Backend login failed (network error), trying Supabase...", err);
+    }
+  }
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,

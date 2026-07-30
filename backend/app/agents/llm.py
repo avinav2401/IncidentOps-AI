@@ -15,10 +15,10 @@ def get_llm_client(settings: Settings | None = None) -> AsyncOpenAI:
     if settings is None:
         settings = Settings()
         
-    if settings.llm_provider.lower() == "grok":
+    if settings.llm_provider.lower() == "groq":
         return AsyncOpenAI(
-            api_key=settings.grok_api_key,
-            base_url="https://api.x.ai/v1",
+            api_key=settings.groq_api_key,
+            base_url="https://api.groq.com/openai/v1",
         )
     else:
         return AsyncOpenAI(
@@ -49,9 +49,9 @@ async def call_llm(
     """Helper to make a simple LLM call."""
     settings = Settings()
     
-    # Map models for Grok if selected
-    if settings.llm_provider.lower() == "grok":
-        model = "grok-2-latest"
+    # Map models for Groq if selected
+    if settings.llm_provider.lower() == "groq":
+        model = "llama-3.1-70b-versatile"
         
     client = get_llm_client(settings)
     

@@ -8,10 +8,10 @@ IncidentOps AI turns the noisy first minutes of an outage into an auditable work
 
 - Tracks an incident from **Open** through **Investigating**, **Waiting Approval**, **Resolved**, and **Closed**.
 - Presents incident impact, evidence, timeline, owner, severity, and current action in one command center.
-- Orchestrates an agent-style investigation flow: monitor signal → log/GitHub context → root-cause hypothesis → recommendation → human approval → notification/ticket handoff.
+- Orchestrates an agent-style investigation flow: monitor signal → log context → root-cause hypothesis → recommendation → human approval → notification/ticket handoff.
 - **Real-time Pipeline Tracking:** Uses Server-Sent Events (SSE) to stream agent thoughts, steps, and execution timings directly to the frontend.
-- **Production-grade Security:** Secret scanning with Gitleaks in CI, strict constant-time HMAC-SHA256 signature verification for inbound webhooks (GitHub, PagerDuty, Slack), and a formal `SECURITY.md` policy.
-- **Pluggable Output Handlers:** An extensible registry for posting incident resolutions, PR comments, and AI recommendations to external platforms like Slack and GitHub.
+- **Production-grade Security:** Secret scanning with Gitleaks in CI, strict constant-time HMAC-SHA256 signature verification for inbound webhooks (PagerDuty, Slack), and a formal `SECURITY.md` policy.
+- **Pluggable Output Handlers:** An extensible registry for posting incident resolutions and AI recommendations to external platforms like Slack.
 - Enforces role-aware workflows for **Admin**, **Incident Commander**, and **Responder** users with JWT-backed API access.
 - Captures operator decisions and lifecycle transitions in an immutable audit trail.
 - Surfaces operational analytics and agent health so teams can understand both incidents and the system investigating them.
@@ -36,7 +36,7 @@ IncidentOps AI turns the noisy first minutes of an outage into an auditable work
 - Ruff & Black (linting/formatting)
 
 **AI & Agents:**
-- Supported LLMs: OpenAI (GPT-4o) and xAI (Grok-2)
+- Supported LLMs: OpenAI (GPT-4o) and Groq (LLaMA 3.1)
 - Tool Calling & Agent logic implemented via direct LLM orchestration (with `pyautogen` available as an extension point).
 
 **DevOps:**
@@ -49,7 +49,7 @@ IncidentOps AI turns the noisy first minutes of an outage into an auditable work
 ```mermaid
 flowchart LR
     A["Monitor detects a signal"] --> B["Open incident"]
-    B --> C["Collect logs & GitHub context"]
+    B --> C["Collect logs & context"]
     C --> D["Generate root-cause hypothesis"]
     D --> E["Recommend remediation"]
     E --> F{"Human approval"}
@@ -71,7 +71,6 @@ flowchart TB
     A -. "optional" .-> R["Redis / scheduler"]
     A --> S["Slack adapter"]
     A --> J["Jira adapter"]
-    A --> G["GitHub context adapter"]
 ```
 
 The Docker setup brings up PostgreSQL and Redis alongside the application so a production-style data path can be wired in without changing the developer workflow. The current demo backend deliberately ships with seeded data and optional JSON persistence; it does not make unprompted changes in external systems.
@@ -160,8 +159,8 @@ Once you have the app running locally via Docker or local development, follow th
 4. **Trigger AI Analysis:** Click the button to trigger the orchestrator pipeline.
 5. **Watch the Stream:** The UI will connect to the `/stream` endpoint and display real-time Server-Sent Events (SSE) as the Triage, Correlation, and Runbook agents process the incident.
 6. **Review and Approve:** Once the AI agents finish, a recommendation will be proposed. You can review the rationale, risk, and proposed actions, then click **Approve** or **Reject**.
-7. **Verify Outputs:** If you configured Slack and GitHub integration secrets in `.env`, the `OutputHandlerRegistry` will automatically dispatch the approved remediation plan to your configured channels and repositories.
-8. **Test Webhooks:** You can simulate incoming webhooks by sending HTTP POST requests to `/api/v1/webhooks/github` or `/api/v1/webhooks/pagerduty`. (Make sure to sign your requests with the correct HMAC-SHA256 signature if you have webhook secrets configured!).
+7. **Verify Outputs:** If you configured Slack integration secrets in `.env`, the `OutputHandlerRegistry` will automatically dispatch the approved remediation plan to your configured channels.
+8. **Test Webhooks:** You can simulate incoming webhooks by sending HTTP POST requests to `/api/v1/webhooks/pagerduty`. (Make sure to sign your requests with the correct HMAC-SHA256 signature if you have webhook secrets configured!).
 
 ## API at a glance
 
@@ -178,7 +177,6 @@ Once you have the app running locally via Docker or local development, follow th
 | `POST` | `/incidents/{id}/resolve` | Resolve an incident and append the relevant audit event. |
 | `GET` | `/analytics` | Retrieve portfolio-level incident metrics. |
 | `GET` | `/agents/status` | Retrieve workflow-agent availability and health. |
-| `POST` | `/webhooks/github` | Receive GitHub webhooks with HMAC-SHA256 signature verification. |
 | `POST` | `/webhooks/pagerduty` | Receive PagerDuty V3 webhooks with HMAC-SHA256 signature verification. |
 | `POST` | `/slack/test` | Exercise the safe Slack handoff/test adapter. |
 | `POST` | `/jira/test` | Exercise the safe Jira handoff/test adapter. |
@@ -209,9 +207,9 @@ Copy [`.env.example`](.env.example) to `.env` to override Docker Compose default
 | --- | --- | --- |
 | `FRONTEND_PORT` / `BACKEND_PORT` | `3000` / `8000` | Host ports exposed by the web app and API. |
 | `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Public API base URL embedded in the Next.js build. |
-| `LLM_PROVIDER` | `openai` | Set to `openai` or `grok` to switch between LLM models. |
+| `LLM_PROVIDER` | `openai` | Set to `openai` or `groq` to switch between LLM models. |
 | `OPENAI_API_KEY` | empty | API key for OpenAI GPT models. |
-| `GROK_API_KEY` | empty | API key for xAI Grok models. |
+| `GROQ_API_KEY` | empty | API key for Groq models (LLaMA-3). |
 | `APP_ENV` | `development` | Runtime environment label. |
 | `DEMO_MODE` | `true` | Keeps the workflow in safe seeded/demo behavior. |
 | `JWT_SECRET_KEY` | demo placeholder | Signing secret for API tokens. Replace it outside local development. |
@@ -222,8 +220,6 @@ Copy [`.env.example`](.env.example) to `.env` to override Docker Compose default
 | `SLACK_WEBHOOK_URL`, `SLACK_BOT_TOKEN`, `SLACK_CHANNEL` | empty | Enables an explicit Slack integration configuration. |
 | `SLACK_SIGNING_SECRET` | empty | HMAC-SHA256 secret for verifying Slack webhook requests. |
 | `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`, `JIRA_PROJECT_KEY` | empty | Enables an explicit Jira integration configuration. |
-| `GITHUB_TOKEN` | empty | Enables authenticated GitHub context lookups when implemented. |
-| `GITHUB_WEBHOOK_SECRET` | empty | HMAC-SHA256 secret for verifying inbound GitHub webhooks. |
 | `PAGERDUTY_WEBHOOK_SECRET` | empty | HMAC-SHA256 secret for verifying inbound PagerDuty V3 webhooks. |
 
 ## Repository layout

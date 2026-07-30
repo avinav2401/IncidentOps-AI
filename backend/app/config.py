@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=("../.env", ".env"),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
@@ -60,14 +60,13 @@ class Settings(BaseSettings):
     jira_email: str = ""
     jira_api_token: str = ""
     jira_project_key: str = ""
-    github_token: str = ""
-    github_webhook_secret: str = ""
+
     pagerduty_webhook_secret: str = ""
 
     # ── AI / LLM configuration ────────────────────────────────────────
     openai_api_key: str = ""
-    grok_api_key: str = ""
-    llm_provider: str = "openai"  # "openai" or "grok"
+    groq_api_key: str = ""
+    llm_provider: str = "openai"  # "openai" or "groq"
 
     # ── Derived helpers ────────────────────────────────────────────────
 
