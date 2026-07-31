@@ -28,9 +28,7 @@ class StreamEvent:
     type: str
     data: dict[str, Any]
     incident_id: str
-    timestamp: str = field(
-        default_factory=lambda: datetime.now(UTC).isoformat()
-    )
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

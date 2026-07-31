@@ -92,50 +92,31 @@ def list_incidents(
         q = q.filter(Incident.service.ilike(service))
     if query:
         needle = f"%{query}%"
-        q = q.filter(
-            Incident.title.ilike(needle)
-            | Incident.description.ilike(needle)
-            | Incident.tags_raw.ilike(needle)
-        )
+        q = q.filter(Incident.title.ilike(needle) | Incident.description.ilike(needle) | Incident.tags_raw.ilike(needle))
     total = q.count()
     rows = q.order_by(Incident.created_at.desc()).offset(offset).limit(limit).all()
     return [r.to_dict() for r in rows], total
 
 
 def get_incident(db: Session, incident_id: str) -> dict[str, Any] | None:
-    row = db.query(Incident).filter(
-        (Incident.id == incident_id) | (Incident.incident_number == incident_id)
-    ).first()
+    row = db.query(Incident).filter((Incident.id == incident_id) | (Incident.incident_number == incident_id)).first()
     return row.to_dict() if row else None
 
 
 def get_detail(db: Session, incident_id: str) -> dict[str, Any] | None:
-    incident = db.query(Incident).filter(
-        (Incident.id == incident_id) | (Incident.incident_number == incident_id)
-    ).first()
+    incident = db.query(Incident).filter((Incident.id == incident_id) | (Incident.incident_number == incident_id)).first()
     if not incident:
         return None
     real_id = incident.id
-    logs = (
-        db.query(IncidentLog)
-        .filter(IncidentLog.incident_id == real_id)
-        .order_by(IncidentLog.created_at)
-        .all()
-    )
+    logs = db.query(IncidentLog).filter(IncidentLog.incident_id == real_id).order_by(IncidentLog.created_at).all()
     audits = (
         db.query(AuditLog)
-        .filter(
-            (AuditLog.entity_id == real_id)
-            | (AuditLog.metadata_raw.contains(real_id))
-        )
+        .filter((AuditLog.entity_id == real_id) | (AuditLog.metadata_raw.contains(real_id)))
         .order_by(AuditLog.created_at.desc())
         .all()
     )
     recommendations = (
-        db.query(AIRecommendation)
-        .filter(AIRecommendation.incident_id == real_id)
-        .order_by(AIRecommendation.created_at.desc())
-        .all()
+        db.query(AIRecommendation).filter(AIRecommendation.incident_id == real_id).order_by(AIRecommendation.created_at.desc()).all()
     )
     base = incident.to_dict()
     log_dicts = [log.to_dict() for log in logs]
@@ -174,7 +155,9 @@ def create_incident(db: Session, request: IncidentCreate, actor: str = "Maya Che
     incident.tags = request.tags
     db.add(incident)
     _add_log(db, incident.id, "incident_created", f"{incident.incident_number} was created.", actor, {"source": incident.source})
-    _add_audit(db, "incident", incident.id, "incident.created", actor, f"Created {incident.incident_number}.", {"severity": incident.severity})
+    _add_audit(
+        db, "incident", incident.id, "incident.created", actor, f"Created {incident.incident_number}.", {"severity": incident.severity}
+    )
     db.commit()
     db.refresh(incident)
     return incident.to_dict()
@@ -183,12 +166,8 @@ def create_incident(db: Session, request: IncidentCreate, actor: str = "Maya Che
 # ── Update ─────────────────────────────────────────────────────────────
 
 
-def update_incident(
-    db: Session, incident_id: str, request: IncidentUpdate, actor: str = "Maya Chen"
-) -> dict[str, Any] | None:
-    incident = db.query(Incident).filter(
-        (Incident.id == incident_id) | (Incident.incident_number == incident_id)
-    ).first()
+def update_incident(db: Session, incident_id: str, request: IncidentUpdate, actor: str = "Maya Chen") -> dict[str, Any] | None:
+    incident = db.query(Incident).filter((Incident.id == incident_id) | (Incident.incident_number == incident_id)).first()
     if not incident:
         return None
     real_id = incident.id
@@ -212,39 +191,33 @@ def update_incident(
     db.refresh(incident)
     return incident.to_dict()
 
+
 # ── Comments ───────────────────────────────────────────────────────────
 
 
 def add_comment(db: Session, incident_id: str, comment_text: str, actor: str = "Maya Chen") -> dict[str, Any] | None:
-    incident = db.query(Incident).filter(
-        (Incident.id == incident_id) | (Incident.incident_number == incident_id)
-    ).first()
+    incident = db.query(Incident).filter((Incident.id == incident_id) | (Incident.incident_number == incident_id)).first()
     if not incident:
         return None
-        
+
     real_id = incident.id
     log = _add_log(db, real_id, "user_comment", comment_text, actor)
     _add_audit(db, "incident", real_id, "incident.commented", actor, "User commented on incident.")
-    
+
     db.commit()
     db.refresh(log)
     return log.to_dict()
+
 
 # ── Approve ────────────────────────────────────────────────────────────
 
 
 def approve(db: Session, incident_id: str, request: ApprovalRequest) -> tuple[dict, dict] | None:
-    incident = db.query(Incident).filter(
-        (Incident.id == incident_id) | (Incident.incident_number == incident_id)
-    ).first()
+    incident = db.query(Incident).filter((Incident.id == incident_id) | (Incident.incident_number == incident_id)).first()
     if not incident:
         return None
     real_id = incident.id
-    recommendations = (
-        db.query(AIRecommendation)
-        .filter(AIRecommendation.incident_id == real_id)
-        .all()
-    )
+    recommendations = db.query(AIRecommendation).filter(AIRecommendation.incident_id == real_id).all()
     recommendation = None
     if request.recommendation_id:
         recommendation = next((r for r in recommendations if r.id == request.recommendation_id), None)
@@ -296,9 +269,7 @@ def approve(db: Session, incident_id: str, request: ApprovalRequest) -> tuple[di
 
 
 def resolve(db: Session, incident_id: str, request: ResolutionRequest) -> dict[str, Any] | None:
-    incident = db.query(Incident).filter(
-        (Incident.id == incident_id) | (Incident.incident_number == incident_id)
-    ).first()
+    incident = db.query(Incident).filter((Incident.id == incident_id) | (Incident.incident_number == incident_id)).first()
     if not incident:
         return None
     real_id = incident.id
@@ -308,10 +279,19 @@ def resolve(db: Session, incident_id: str, request: ResolutionRequest) -> dict[s
     incident.updated_at = now
     incident.resolved_at = now
     incident.resolution_summary = request.summary
-    _add_log(db, real_id, "incident_resolved", "Incident marked resolved after operator confirmation.", request.actor, {"summary": request.summary})
+    _add_log(
+        db,
+        real_id,
+        "incident_resolved",
+        "Incident marked resolved after operator confirmation.",
+        request.actor,
+        {"summary": request.summary},
+    )
     if previous_status != IncidentState.RESOLVED.value:
         _add_log(db, real_id, "status_changed", f"Status changed from {previous_status} to Resolved.", request.actor)
-    _add_audit(db, "incident", real_id, "incident.resolved", request.actor, f"Resolved {incident.incident_number}.", {"summary": request.summary})
+    _add_audit(
+        db, "incident", real_id, "incident.resolved", request.actor, f"Resolved {incident.incident_number}.", {"summary": request.summary}
+    )
     db.commit()
     db.refresh(incident)
     return incident.to_dict()
@@ -321,9 +301,7 @@ def resolve(db: Session, incident_id: str, request: ResolutionRequest) -> dict[s
 
 
 def delete_incident(db: Session, incident_id: str, actor: str = "Maya Chen") -> bool:
-    incident = db.query(Incident).filter(
-        (Incident.id == incident_id) | (Incident.incident_number == incident_id)
-    ).first()
+    incident = db.query(Incident).filter((Incident.id == incident_id) | (Incident.incident_number == incident_id)).first()
     if not incident:
         return False
     _add_audit(db, "incident", incident.id, "incident.deleted", actor, f"Deleted {incident.incident_number}.")
@@ -336,33 +314,21 @@ def delete_incident(db: Session, incident_id: str, actor: str = "Maya Chen") -> 
 
 
 def get_incident_logs(db: Session, incident_id: str) -> list[dict[str, Any]] | None:
-    incident = db.query(Incident).filter(
-        (Incident.id == incident_id) | (Incident.incident_number == incident_id)
-    ).first()
+    incident = db.query(Incident).filter((Incident.id == incident_id) | (Incident.incident_number == incident_id)).first()
     if not incident:
         return None
     real_id = incident.id
-    logs = (
-        db.query(IncidentLog)
-        .filter(IncidentLog.incident_id == real_id)
-        .order_by(IncidentLog.created_at)
-        .all()
-    )
+    logs = db.query(IncidentLog).filter(IncidentLog.incident_id == real_id).order_by(IncidentLog.created_at).all()
     return [log.to_dict() for log in logs]
 
 
 # ── Audit ──────────────────────────────────────────────────────────────
 
 
-def audit_logs(
-    db: Session, incident_id: str | None = None, limit: int = 100
-) -> list[dict[str, Any]]:
+def audit_logs(db: Session, incident_id: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
     q = db.query(AuditLog)
     if incident_id:
-        q = q.filter(
-            (AuditLog.entity_id == incident_id)
-            | (AuditLog.metadata_raw.contains(incident_id))
-        )
+        q = q.filter((AuditLog.entity_id == incident_id) | (AuditLog.metadata_raw.contains(incident_id)))
     rows = q.order_by(AuditLog.created_at.desc()).limit(limit).all()
     return [r.to_dict() for r in rows]
 
@@ -372,29 +338,16 @@ def audit_logs(
 
 def get_notifications(db: Session, incident_id: str) -> dict[str, Any] | None:
     """Return Slack messages and Jira tickets linked to an incident."""
-    from app.models.slack_message import SlackMessage
     from app.models.jira_sync import JiraSync
+    from app.models.slack_message import SlackMessage
 
-    incident = db.query(Incident).filter(
-        (Incident.id == incident_id) | (Incident.incident_number == incident_id)
-    ).first()
+    incident = db.query(Incident).filter((Incident.id == incident_id) | (Incident.incident_number == incident_id)).first()
     if not incident:
         return None
     real_id = incident.id
-    slack_messages = (
-        db.query(SlackMessage)
-        .filter(SlackMessage.incident_id == real_id)
-        .order_by(SlackMessage.sent_at.desc())
-        .all()
-    )
-    jira_tickets = (
-        db.query(JiraSync)
-        .filter(JiraSync.incident_id == real_id)
-        .order_by(JiraSync.synced_at.desc())
-        .all()
-    )
+    slack_messages = db.query(SlackMessage).filter(SlackMessage.incident_id == real_id).order_by(SlackMessage.sent_at.desc()).all()
+    jira_tickets = db.query(JiraSync).filter(JiraSync.incident_id == real_id).order_by(JiraSync.synced_at.desc()).all()
     return {
         "slack_messages": [m.to_dict() for m in slack_messages],
         "jira_tickets": [t.to_dict() for t in jira_tickets],
     }
-

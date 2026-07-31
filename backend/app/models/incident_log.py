@@ -15,9 +15,7 @@ class IncidentLog(Base):
     __tablename__ = "incident_logs"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    incident_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("incidents.id", ondelete="CASCADE"), nullable=False, index=True
-    )
+    incident_id: Mapped[str] = mapped_column(String(36), ForeignKey("incidents.id", ondelete="CASCADE"), nullable=False, index=True)
     event_type: Mapped[str] = mapped_column(String(60), nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)
     actor: Mapped[str] = mapped_column(String(120), nullable=False)

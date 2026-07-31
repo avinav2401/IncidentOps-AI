@@ -20,11 +20,11 @@ def client():
     with each other.
     """
     test_engine = create_engine(
-        "sqlite:///:memory:", 
+        "sqlite:///:memory:",
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
-    TestSession = sessionmaker(bind=test_engine, autocommit=False, autoflush=False)
+    test_session = sessionmaker(bind=test_engine, autocommit=False, autoflush=False)
 
     # Import models so Base.metadata knows about all tables.
     import app.models  # noqa: F401
@@ -33,21 +33,22 @@ def client():
     Base.metadata.create_all(bind=test_engine)
 
     # Seed demo data.
-    db = TestSession()
+    db = test_session()
     seed_database(db)
     db.close()
 
     # Override the get_db dependency to use our test database.
     def override_get_db():
-        db = TestSession()
+        db = test_session()
         try:
             yield db
         finally:
             db.close()
 
     # Build the app without lifespan (we handle DB setup ourselves above).
-    from app.main import create_app
     from app.config import settings
+    from app.main import create_app
+
     settings.demo_mode = True
     app = create_app()
     app.dependency_overrides[get_db] = override_get_db

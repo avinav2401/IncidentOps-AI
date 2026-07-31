@@ -14,9 +14,7 @@ class SlackMessage(Base):
     __tablename__ = "slack_messages"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    incident_id: Mapped[str | None] = mapped_column(
-        String(36), ForeignKey("incidents.id", ondelete="SET NULL"), nullable=True, index=True
-    )
+    incident_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("incidents.id", ondelete="SET NULL"), nullable=True, index=True)
     channel: Mapped[str] = mapped_column(String(100), nullable=False, default="#incidentops-test")
     message: Mapped[str] = mapped_column(Text, nullable=False)
     sent_at: Mapped[datetime] = mapped_column(

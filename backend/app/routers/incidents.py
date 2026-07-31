@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import logging
-
+import random
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
-import random
 
 from app.agents.orchestrator import run_pipeline
 from app.agents.post_approval_pipeline import run_post_approval_pipeline
@@ -17,14 +15,15 @@ from app.middleware.auth import get_current_user
 from app.models.user import User
 from app.schemas.incident import (
     ApprovalRequest,
+    CommentRequest,
     IncidentCreate,
     IncidentDetail,
     IncidentListResponse,
     IncidentLogRead,
     IncidentRead,
+    IncidentState,
     IncidentUpdate,
     ResolutionRequest,
-    CommentRequest,
 )
 from app.services import incident_service as svc
 
@@ -71,12 +70,12 @@ def simulate_incident(
         ("High Latency", "API requests timing out after 30s.", "P2", 4500),
         ("Connection Refused", "Database connections failing.", "P1", 15000),
         ("Replication Lag", "Read replicas falling behind primary.", "P3", 1200),
-        ("CPU Spikes", "Service consuming 100% CPU.", "P2", 3000)
+        ("CPU Spikes", "Service consuming 100% CPU.", "P2", 3000),
     ]
-    
+
     svc_name = random.choice(services)
     issue_title, desc, severity, users = random.choice(issues)
-    
+
     payload = IncidentCreate(
         title=f"[{svc_name}] {issue_title}",
         description=f"Automated chaos engineering simulation: {desc} Affecting critical paths.",
@@ -85,7 +84,7 @@ def simulate_incident(
         status=IncidentState.OPEN,
         affected_users=users,
         tags=["simulated", "chaos"],
-        source="Chaos Simulator"
+        source="Chaos Simulator",
     )
     return IncidentRead.model_validate(svc.create_incident(db, payload, "Simulator"))
 
@@ -219,4 +218,3 @@ def get_notifications(
     if result is None:
         raise _not_found(incident_id)
     return result
-

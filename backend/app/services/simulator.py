@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
+
 from app.schemas.incident import IncidentCreate, IncidentState
 from app.services.incident_service import create_incident
+
 
 def inject_payment_service_crash(db: Session, actor: str) -> dict:
     payload = IncidentCreate(
@@ -12,6 +14,6 @@ def inject_payment_service_crash(db: Session, actor: str) -> dict:
         owner=actor,
         source="Monitor Agent",
         affected_users=15000,
-        tags=["payment", "critical", "simulated"]
+        tags=["payment", "critical", "simulated"],
     )
     return create_incident(db, payload, actor)

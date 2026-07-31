@@ -38,8 +38,9 @@ def login(req: LoginRequest, db: Session = Depends(get_db)) -> LoginResponse:
             email=user.email,
             role=user.role,
             avatar_initials=user.avatar_initials,
-        )
+        ),
     )
+
 
 @router.get("/me", response_model=UserRead, summary="Current user profile")
 def me(user: User = Depends(get_current_user)) -> UserRead:

@@ -1,5 +1,7 @@
 # IncidentOps AI
 
+[![CI](https://github.com/avinav2401/IncidentOps-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/avinav2401/IncidentOps-AI/actions/workflows/ci.yml)
+
 **A human-governed incident command center for detecting, investigating, approving, and resolving production incidents.**
 
 IncidentOps AI turns the noisy first minutes of an outage into an auditable workflow: it gathers signals, proposes a root cause and next action, and keeps a human accountable for the decision. It is designed as a portfolio-grade demonstration of an AI-assisted operations product—not an autonomous production change engine.
@@ -33,7 +35,7 @@ IncidentOps AI turns the noisy first minutes of an outage into an auditable work
 - APScheduler (background tasks)
 - Pydantic (data validation)
 - Pytest (testing)
-- Ruff & Black (linting/formatting)
+- Ruff (linting/formatting)
 
 **AI & Agents:**
 - Supported LLMs: OpenAI (GPT-4o) and Groq (LLaMA 3.1)

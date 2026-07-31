@@ -86,5 +86,6 @@ class Settings(BaseSettings):
                 raise ValueError("JWT_SECRET_KEY must be changed in production!")
         return self
 
+
 # Singleton — imported everywhere as ``from app.config import settings``.
 settings = Settings()

@@ -82,9 +82,7 @@ class OutputHandlerRegistry:
     def register(self, handler: OutputHandler) -> None:
         """Register an output handler."""
         self._handlers[handler.destination_type] = handler
-        _structured_log(
-            "handler_registered", destination_type=handler.destination_type
-        )
+        _structured_log("handler_registered", destination_type=handler.destination_type)
 
     def get(self, destination_type: str) -> OutputHandler | None:
         """Get handler for a given destination type."""
@@ -167,11 +165,7 @@ async def post_to_destinations(
                 message_id=result.message_id,
             )
         except Exception as e:
-            _structured_log(
-                "output_post_failed", destination_type=dest_type, error=str(e)
-            )
-            results.append(
-                OutputResult(success=False, destination_type=dest_type, error=str(e))
-            )
+            _structured_log("output_post_failed", destination_type=dest_type, error=str(e))
+            results.append(OutputResult(success=False, destination_type=dest_type, error=str(e)))
 
     return results

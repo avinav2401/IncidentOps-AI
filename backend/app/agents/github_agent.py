@@ -9,12 +9,9 @@ async def fetch_recent_commits(service: str) -> list[str]:
     """
     await asyncio.sleep(1)  # Simulate API delay
     if service == "Payment Service":
-        return [
-            "Commit abc123: Cache disabled (2 minutes ago)",
-            "Commit def456: Update dependencies (1 hour ago)"
-        ]
+        return ["Commit abc123: Cache disabled (2 minutes ago)", "Commit def456: Update dependencies (1 hour ago)"]
     return [
         "Commit a1b2c3d: Increased DB pool size limit.",
         "Commit f5e6d7c: Updated dependencies.",
-        "Commit 9a8b7c6: Refactored payment processing logic."
+        "Commit 9a8b7c6: Refactored payment processing logic.",
     ]

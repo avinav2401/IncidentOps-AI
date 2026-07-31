@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-class IncidentState(str, Enum):
+class IncidentState(StrEnum):
     OPEN = "Open"
     INVESTIGATING = "Investigating"
     WAITING_APPROVAL = "Waiting Approval"
@@ -18,7 +18,7 @@ class IncidentState(str, Enum):
     CLOSED = "Closed"
 
 
-class Severity(str, Enum):
+class Severity(StrEnum):
     P1 = "P1"
     P2 = "P2"
     P3 = "P3"
@@ -158,6 +158,7 @@ class ResolutionRequest(BaseModel):
         max_length=4_000,
     )
     actor: str = Field(default="Maya Chen", max_length=120)
+
 
 class CommentRequest(BaseModel):
     content: str = Field(min_length=1, max_length=4_000)

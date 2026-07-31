@@ -14,9 +14,7 @@ class JiraSync(Base):
     __tablename__ = "jira_sync"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    incident_id: Mapped[str | None] = mapped_column(
-        String(36), ForeignKey("incidents.id", ondelete="SET NULL"), nullable=True, index=True
-    )
+    incident_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("incidents.id", ondelete="SET NULL"), nullable=True, index=True)
     issue_key: Mapped[str] = mapped_column(String(20), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="synced")
     synced_at: Mapped[datetime] = mapped_column(

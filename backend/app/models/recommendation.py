@@ -15,9 +15,7 @@ class AIRecommendation(Base):
     __tablename__ = "ai_recommendations"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    incident_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("incidents.id", ondelete="CASCADE"), nullable=False, index=True
-    )
+    incident_id: Mapped[str] = mapped_column(String(36), ForeignKey("incidents.id", ondelete="CASCADE"), nullable=False, index=True)
     title: Mapped[str] = mapped_column(String(256), nullable=False)
     rationale: Mapped[str] = mapped_column(Text, nullable=False)
     confidence: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
@@ -27,7 +25,7 @@ class AIRecommendation(Base):
     proposed_actions_raw: Mapped[str] = mapped_column("proposed_actions", Text, nullable=False, default="[]")
     evidence_chain_raw: Mapped[str | None] = mapped_column("evidence_chain", Text, nullable=True)
     similar_incidents_raw: Mapped[str | None] = mapped_column("similar_incidents", Text, nullable=True)
-    
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

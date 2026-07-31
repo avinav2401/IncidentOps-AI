@@ -98,8 +98,14 @@ def _try_parse_structured(text: str) -> dict | None:
         data = json.loads(text)
         if isinstance(data, dict):
             known = {
-                "summary", "result", "message", "root_cause", "cause",
-                "recommendations", "next_steps", "confidence",
+                "summary",
+                "result",
+                "message",
+                "root_cause",
+                "cause",
+                "recommendations",
+                "next_steps",
+                "confidence",
             }
             if known & data.keys():
                 return data

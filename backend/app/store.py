@@ -37,6 +37,7 @@ def _timestamp(value: datetime) -> str:
 def _seed_state() -> dict[str, Any]:
     """Return fresh, realistic demo data relative to the current time."""
     now = utcnow()
+
     def minutes(number: int) -> str:
         return _timestamp(now - timedelta(minutes=number))
 
@@ -137,13 +138,50 @@ def _seed_state() -> dict[str, Any]:
         }
 
     logs = [
-        event("log_001", "inc_checkout_auth", "alert_received", "Datadog monitor detected a 12.8% authorization error rate.", "Datadog", minutes(52)),
+        event(
+            "log_001",
+            "inc_checkout_auth",
+            "alert_received",
+            "Datadog monitor detected a 12.8% authorization error rate.",
+            "Datadog",
+            minutes(52),
+        ),
         event("log_002", "inc_checkout_auth", "ownership_assigned", "Maya Chen accepted incident command.", "IncidentOps AI", minutes(47)),
-        event("log_003", "inc_checkout_auth", "ai_analysis", "AI correlation linked the error increase to the gateway rollout.", "Triage Agent", minutes(34), {"confidence": 92}),
+        event(
+            "log_003",
+            "inc_checkout_auth",
+            "ai_analysis",
+            "AI correlation linked the error increase to the gateway rollout.",
+            "Triage Agent",
+            minutes(34),
+            {"confidence": 92},
+        ),
         event("log_004", "inc_checkout_auth", "status_changed", "Status changed to Investigating.", "Maya Chen", minutes(31)),
-        event("log_005", "inc_warehouse_lag", "alert_received", "PagerDuty opened an alert for consumer lag above 18 minutes.", "PagerDuty", hours(3)),
-        event("log_006", "inc_warehouse_lag", "recommendation_created", "A safe queue-consumer scale-out plan is awaiting approval.", "Runbook Agent", minutes(18), {"recommendation_id": "rec_queue_scale"}),
-        event("log_007", "inc_mobile_push", "resolved", "Secondary provider traffic shift completed and delivery SLO recovered.", "Lena Ortiz", hours(19)),
+        event(
+            "log_005",
+            "inc_warehouse_lag",
+            "alert_received",
+            "PagerDuty opened an alert for consumer lag above 18 minutes.",
+            "PagerDuty",
+            hours(3),
+        ),
+        event(
+            "log_006",
+            "inc_warehouse_lag",
+            "recommendation_created",
+            "A safe queue-consumer scale-out plan is awaiting approval.",
+            "Runbook Agent",
+            minutes(18),
+            {"recommendation_id": "rec_queue_scale"},
+        ),
+        event(
+            "log_007",
+            "inc_mobile_push",
+            "resolved",
+            "Secondary provider traffic shift completed and delivery SLO recovered.",
+            "Lena Ortiz",
+            hours(19),
+        ),
     ]
     audits = [
         {
@@ -230,25 +268,92 @@ def _seed_state() -> dict[str, Any]:
     return {
         "version": 1,
         "users": [
-            {"id": "usr_maya", "name": "Maya Chen", "email": "maya.chen@incidentops.dev", "role": "incident_commander", "avatar_initials": "MC", "password": "demo123"},
-            {"id": "usr_samir", "name": "Samir Patel", "email": "samir.patel@incidentops.dev", "role": "responder", "avatar_initials": "SP", "password": "demo123"},
-            {"id": "usr_lena", "name": "Lena Ortiz", "email": "lena.ortiz@incidentops.dev", "role": "admin", "avatar_initials": "LO", "password": "demo123"},
+            {
+                "id": "usr_maya",
+                "name": "Maya Chen",
+                "email": "maya.chen@incidentops.dev",
+                "role": "incident_commander",
+                "avatar_initials": "MC",
+                "password": "demo123",
+            },
+            {
+                "id": "usr_samir",
+                "name": "Samir Patel",
+                "email": "samir.patel@incidentops.dev",
+                "role": "responder",
+                "avatar_initials": "SP",
+                "password": "demo123",
+            },
+            {
+                "id": "usr_lena",
+                "name": "Lena Ortiz",
+                "email": "lena.ortiz@incidentops.dev",
+                "role": "admin",
+                "avatar_initials": "LO",
+                "password": "demo123",
+            },
         ],
         "incidents": incidents,
         "incident_logs": logs,
         "audit_logs": audits,
         "ai_recommendations": recommendations,
         "agent_status": [
-            {"id": "agent_triage", "name": "Triage Agent", "purpose": "Classifies alerts and establishes incident context.", "status": "healthy", "last_heartbeat": minutes(1), "active_incidents": 1, "success_rate": 98.4},
-            {"id": "agent_correlation", "name": "Correlation Agent", "purpose": "Links signals, deployments, and related incidents.", "status": "working", "last_heartbeat": minutes(1), "active_incidents": 2, "success_rate": 96.7},
-            {"id": "agent_runbook", "name": "Runbook Agent", "purpose": "Proposes bounded, auditable remediation steps.", "status": "awaiting_approval", "last_heartbeat": minutes(2), "active_incidents": 1, "success_rate": 94.8},
-            {"id": "agent_comms", "name": "Comms Agent", "purpose": "Prepares stakeholder updates and handoff summaries.", "status": "healthy", "last_heartbeat": minutes(1), "active_incidents": 0, "success_rate": 99.1},
+            {
+                "id": "agent_triage",
+                "name": "Triage Agent",
+                "purpose": "Classifies alerts and establishes incident context.",
+                "status": "healthy",
+                "last_heartbeat": minutes(1),
+                "active_incidents": 1,
+                "success_rate": 98.4,
+            },
+            {
+                "id": "agent_correlation",
+                "name": "Correlation Agent",
+                "purpose": "Links signals, deployments, and related incidents.",
+                "status": "working",
+                "last_heartbeat": minutes(1),
+                "active_incidents": 2,
+                "success_rate": 96.7,
+            },
+            {
+                "id": "agent_runbook",
+                "name": "Runbook Agent",
+                "purpose": "Proposes bounded, auditable remediation steps.",
+                "status": "awaiting_approval",
+                "last_heartbeat": minutes(2),
+                "active_incidents": 1,
+                "success_rate": 94.8,
+            },
+            {
+                "id": "agent_comms",
+                "name": "Comms Agent",
+                "purpose": "Prepares stakeholder updates and handoff summaries.",
+                "status": "healthy",
+                "last_heartbeat": minutes(1),
+                "active_incidents": 0,
+                "success_rate": 99.1,
+            },
         ],
         "jira_sync": [
-            {"id": "jira_sync_001", "incident_id": "inc_mobile_push", "issue_key": "OPS-184", "status": "synced", "synced_at": hours(18), "project_key": "OPS"}
+            {
+                "id": "jira_sync_001",
+                "incident_id": "inc_mobile_push",
+                "issue_key": "OPS-184",
+                "status": "synced",
+                "synced_at": hours(18),
+                "project_key": "OPS",
+            }
         ],
         "slack_messages": [
-            {"id": "slack_001", "incident_id": "inc_checkout_auth", "channel": "#inc-checkout-auth", "message": "Incident commander assigned; investigation is underway.", "sent_at": minutes(43), "status": "delivered"}
+            {
+                "id": "slack_001",
+                "incident_id": "inc_checkout_auth",
+                "channel": "#inc-checkout-auth",
+                "message": "Incident commander assigned; investigation is underway.",
+                "sent_at": minutes(43),
+                "status": "delivered",
+            }
         ],
     }
 
@@ -385,7 +490,11 @@ class DemoStore:
             if not incident:
                 return None
             logs = [item for item in self._state["incident_logs"] if item["incident_id"] == incident_id]
-            audits = [item for item in self._state["audit_logs"] if item["entity_id"] == incident_id or item["metadata"].get("incident_id") == incident_id]
+            audits = [
+                item
+                for item in self._state["audit_logs"]
+                if item["entity_id"] == incident_id or item["metadata"].get("incident_id") == incident_id
+            ]
             recommendations = [item for item in self._state["ai_recommendations"] if item["incident_id"] == incident_id]
             return self._copy(
                 {
@@ -412,8 +521,17 @@ class DemoStore:
                 "resolution_summary": None,
             }
             self._state["incidents"].append(incident)
-            self._add_log(incident["id"], "incident_created", f"{incident['incident_number']} was created.", actor, {"source": incident["source"]})
-            self._add_audit("incident", incident["id"], "incident.created", actor, f"Created {incident['incident_number']}.", {"severity": incident["severity"]})
+            self._add_log(
+                incident["id"], "incident_created", f"{incident['incident_number']} was created.", actor, {"source": incident["source"]}
+            )
+            self._add_audit(
+                "incident",
+                incident["id"],
+                "incident.created",
+                actor,
+                f"Created {incident['incident_number']}.",
+                {"severity": incident["severity"]},
+            )
             self._persist()
             return self._copy(incident)
 
@@ -433,7 +551,9 @@ class DemoStore:
             self._add_log(incident_id, "incident_updated", "Incident fields were updated.", actor, {"fields": sorted(changes)})
             if "status" in changes and changes["status"] != previous_status:
                 self._add_log(incident_id, "status_changed", f"Status changed from {previous_status} to {changes['status']}.", actor)
-            self._add_audit("incident", incident_id, "incident.updated", actor, f"Updated {incident['incident_number']}.", {"fields": sorted(changes)})
+            self._add_audit(
+                "incident", incident_id, "incident.updated", actor, f"Updated {incident['incident_number']}.", {"fields": sorted(changes)}
+            )
             self._persist()
             return self._copy(incident)
 
@@ -443,7 +563,11 @@ class DemoStore:
             if not incident:
                 return None
             recommendations = [item for item in self._state["ai_recommendations"] if item["incident_id"] == incident_id]
-            recommendation = next((item for item in recommendations if item["id"] == request.recommendation_id), None) if request.recommendation_id else next((item for item in recommendations if item["status"] in {"pending_approval", "ready_for_review"}), None)
+            recommendation = (
+                next((item for item in recommendations if item["id"] == request.recommendation_id), None)
+                if request.recommendation_id
+                else next((item for item in recommendations if item["status"] in {"pending_approval", "ready_for_review"}), None)
+            )
             if not recommendation:
                 recommendation = {
                     "id": f"rec_{uuid4().hex[:12]}",
@@ -483,7 +607,9 @@ class DemoStore:
             self._add_log(incident_id, "approval_recorded", message, request.actor, metadata)
             if incident["status"] != old_status:
                 self._add_log(incident_id, "status_changed", f"Status changed from {old_status} to {incident['status']}.", request.actor)
-            self._add_audit("recommendation", recommendation["id"], action, request.actor, message, {"incident_id": incident_id, **metadata})
+            self._add_audit(
+                "recommendation", recommendation["id"], action, request.actor, message, {"incident_id": incident_id, **metadata}
+            )
             self._persist()
             return self._copy(incident), self._copy(recommendation)
 
@@ -498,10 +624,23 @@ class DemoStore:
             incident["updated_at"] = now
             incident["resolved_at"] = now
             incident["resolution_summary"] = request.summary
-            self._add_log(incident_id, "incident_resolved", "Incident marked resolved after operator confirmation.", request.actor, {"summary": request.summary})
+            self._add_log(
+                incident_id,
+                "incident_resolved",
+                "Incident marked resolved after operator confirmation.",
+                request.actor,
+                {"summary": request.summary},
+            )
             if previous_status != IncidentState.RESOLVED.value:
                 self._add_log(incident_id, "status_changed", f"Status changed from {previous_status} to Resolved.", request.actor)
-            self._add_audit("incident", incident_id, "incident.resolved", request.actor, f"Resolved {incident['incident_number']}.", {"summary": request.summary})
+            self._add_audit(
+                "incident",
+                incident_id,
+                "incident.resolved",
+                request.actor,
+                f"Resolved {incident['incident_number']}.",
+                {"summary": request.summary},
+            )
             self._persist()
             return self._copy(incident)
 
@@ -545,7 +684,11 @@ class DemoStore:
                     ended = datetime.fromisoformat(item["resolved_at"])
                     mttr_values.append(round((ended - started).total_seconds() / 60, 1))
             now = utcnow()
-            active = statuses[IncidentState.OPEN.value] + statuses[IncidentState.INVESTIGATING.value] + statuses[IncidentState.WAITING_APPROVAL.value]
+            active = (
+                statuses[IncidentState.OPEN.value]
+                + statuses[IncidentState.INVESTIGATING.value]
+                + statuses[IncidentState.WAITING_APPROVAL.value]
+            )
             created_this_week = sum(1 for row in incidents if datetime.fromisoformat(row["created_at"]) >= now - timedelta(days=7))
             return self._copy(
                 {
@@ -606,4 +749,3 @@ class DemoStore:
             self._add_audit("integration", str(item["id"]), "jira.tested", actor, f"Created Jira test issue {item['issue_key']}.")
             self._persist()
             return self._copy(item)
-

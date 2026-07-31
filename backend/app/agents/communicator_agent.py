@@ -11,8 +11,8 @@ from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
-from app.models.slack_message import SlackMessage
 from app.models.jira_sync import JiraSync
+from app.models.slack_message import SlackMessage
 
 
 def _utcnow() -> datetime:
@@ -36,13 +36,7 @@ async def send_slack_notification(
         id=f"slack_{_uid()}",
         incident_id=incident_id,
         channel="#incidents-critical",
-        message=(
-            f"✅ Incident Resolved\n"
-            f"Service: {service}\n"
-            f"Root Cause: {root_cause}\n"
-            f"Resolution: {resolution}\n"
-            f"Duration: {duration}"
-        ),
+        message=(f"✅ Incident Resolved\nService: {service}\nRoot Cause: {root_cause}\nResolution: {resolution}\nDuration: {duration}"),
         sent_at=_utcnow(),
         status="delivered",
     )

@@ -20,7 +20,6 @@ from app.database import SessionLocal
 from app.events import agent_end_event, agent_start_event, result_event, thought_event
 from app.models.incident import Incident
 from app.models.incident_log import IncidentLog
-from app.models.recommendation import AIRecommendation
 from app.routers.stream import publish
 
 logger = logging.getLogger(__name__)
@@ -67,7 +66,9 @@ async def run_post_approval_pipeline(
 
         dur = time.monotonic() - step_start
         _add_log(db, incident_id, "execution", f"Executed: {exec_result['command']} → {exec_result['status']}", agent_name)
-        publish(agent_end_event(incident_id, agent_name, summary=f"{exec_result['command']} → {exec_result['status']}", duration_seconds=dur))
+        publish(
+            agent_end_event(incident_id, agent_name, summary=f"{exec_result['command']} → {exec_result['status']}", duration_seconds=dur)
+        )
 
         # ── Step 12: Verify Fix ──────────────────────────────────────
         agent_name = "Verification Agent"
@@ -104,8 +105,12 @@ async def run_post_approval_pipeline(
         step_start = time.monotonic()
 
         slack_msg = await send_slack_notification(
-            db, incident_id, service, root_cause_hypothesis,
-            recommendation_title, duration_str,
+            db,
+            incident_id,
+            service,
+            root_cause_hypothesis,
+            recommendation_title,
+            duration_str,
         )
         _add_log(db, incident_id, "slack_sent", f"Sent to {slack_msg['channel']}: ✅ Incident Resolved", agent_name)
 
@@ -114,16 +119,22 @@ async def run_post_approval_pipeline(
         _add_log(db, incident_id, "jira_created", f"Created {jira_ticket['issue_key']}: Bug — {root_cause_hypothesis}", agent_name)
 
         dur = time.monotonic() - step_start
-        publish(agent_end_event(incident_id, agent_name, summary=f"Slack: {slack_msg['channel']} | Jira: {jira_ticket['issue_key']}", duration_seconds=dur))
+        publish(
+            agent_end_event(
+                incident_id, agent_name, summary=f"Slack: {slack_msg['channel']} | Jira: {jira_ticket['issue_key']}", duration_seconds=dur
+            )
+        )
 
         # ── Pipeline Complete ────────────────────────────────────────
         total_duration = time.monotonic() - pipeline_start
-        publish(result_event(
-            incident_id,
-            text=f"Post-approval pipeline complete. Service verified healthy. Notifications sent.",
-            success=True,
-            total_duration_seconds=total_duration,
-        ))
+        publish(
+            result_event(
+                incident_id,
+                text="Post-approval pipeline complete. Service verified healthy. Notifications sent.",
+                success=True,
+                total_duration_seconds=total_duration,
+            )
+        )
 
         publish(thought_event(incident_id, "✅ Incident fully resolved. Slack notified. Jira ticket created."))
 

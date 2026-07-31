@@ -83,6 +83,11 @@ jobs:
       - name: Compile Python sources
         run: python -m compileall -q .
 
+      - name: Lint and format Python code
+        run: |
+          python -m ruff check .
+          python -m ruff format --check .
+
       - name: Run tests when present
         if: ${{ hashFiles('backend/tests/**/*.py') != '' }}
         run: python -m pytest -q

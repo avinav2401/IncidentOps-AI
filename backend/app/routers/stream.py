@@ -50,11 +50,11 @@ async def _event_generator(
             event = await asyncio.wait_for(queue.get(), timeout=120.0)
             if event is None:
                 # Stream finished
-                yield "data: {\"type\": \"done\"}\n\n"
+                yield 'data: {"type": "done"}\n\n'
                 return
             yield event.to_sse()
     except TimeoutError:
-        yield "data: {\"type\": \"keepalive\"}\n\n"
+        yield 'data: {"type": "keepalive"}\n\n'
     finally:
         # Unsubscribe
         subs = _subscribers.get(incident_id, [])

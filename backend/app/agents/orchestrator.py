@@ -74,9 +74,7 @@ def _update_agent_status(db: Session, name: str, status: str) -> None:
     db.commit()
 
 
-def _add_incident_log(
-    db: Session, incident_id: str, message: str, actor: str
-) -> None:
+def _add_incident_log(db: Session, incident_id: str, message: str, actor: str) -> None:
     """Add a new log entry to the incident timeline."""
     log = IncidentLog(
         id=str(uuid.uuid4()),
@@ -116,7 +114,7 @@ async def run_pipeline(incident_id: str) -> None:
 
         # ── Step 1: Parallel Evidence Gathering ───────────────────────
         step_start = time.monotonic()
-        
+
         publish(thought_event(incident_id, "Gathering evidence from Monitor, Logs, Metrics, and GitHub..."))
 
         async def run_monitor():
@@ -157,7 +155,7 @@ async def run_pipeline(incident_id: str) -> None:
             _update_agent_status(db, agent_name, "Idle")
             publish(agent_end_event(incident_id, agent_name, summary=res[:200], duration_seconds=dur))
             return res
-            
+
         async def run_github():
             agent_name = "GitHub Commit Agent"
             publish(agent_start_event(incident_id, agent_name, description="Fetching recent commits."))
@@ -166,15 +164,14 @@ async def run_pipeline(incident_id: str) -> None:
             start_time = time.monotonic()
             res = await fetch_recent_commits(incident.service)
             dur = time.monotonic() - start_time
-            _add_incident_log(db, incident_id, f"Found recent commits:\n" + "\n".join(res), agent_name)
+            _add_incident_log(db, incident_id, "Found recent commits:\n" + "\n".join(res), agent_name)
             _update_agent_status(db, agent_name, "Idle")
             publish(agent_end_event(incident_id, agent_name, summary=f"Found {len(res)} recent commits.", duration_seconds=dur))
             return res
 
         import asyncio
-        monitor_data, metrics_data, log_summary, commits = await asyncio.gather(
-            run_monitor(), run_metrics(), run_logs(), run_github()
-        )
+
+        monitor_data, metrics_data, log_summary, commits = await asyncio.gather(run_monitor(), run_metrics(), run_logs(), run_github())
 
         # ── Step 2: Root Cause Agent ──────────────────────────────────
         step_start = time.monotonic()
@@ -323,14 +320,10 @@ async def run_pipeline(incident_id: str) -> None:
 
         # Attempt to set status back on failure
         try:
-            incident = (
-                db.query(Incident).filter(Incident.id == incident_id).first()
-            )
+            incident = db.query(Incident).filter(Incident.id == incident_id).first()
             if incident:
                 incident.status = "Open"
-                _add_incident_log(
-                    db, incident_id, f"AI Analysis failed: {e}", "Orchestrator"
-                )
+                _add_incident_log(db, incident_id, f"AI Analysis failed: {e}", "Orchestrator")
                 db.commit()
         except Exception:
             pass

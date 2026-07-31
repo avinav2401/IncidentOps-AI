@@ -103,9 +103,7 @@ def verify_slack_signature(
     # Replay protection
     age = abs(time.time() - ts)
     if age > max_age_seconds:
-        raise SignatureVerificationError(
-            f"request_too_old ({age:.0f}s > {max_age_seconds}s)", "slack"
-        )
+        raise SignatureVerificationError(f"request_too_old ({age:.0f}s > {max_age_seconds}s)", "slack")
 
     base_string = f"v0:{timestamp}:{raw_body}"
     computed = (

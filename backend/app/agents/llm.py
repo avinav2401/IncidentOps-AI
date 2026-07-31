@@ -3,9 +3,9 @@ from __future__ import annotations
 import json
 import logging
 import re
-from typing import Any
 
 from openai import AsyncOpenAI
+
 from app.config import Settings
 
 logger = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 def get_llm_client(settings: Settings | None = None) -> AsyncOpenAI:
     if settings is None:
         settings = Settings()
-        
+
     if settings.llm_provider.lower() == "groq":
         return AsyncOpenAI(
             api_key=settings.groq_api_key,
@@ -37,7 +37,7 @@ def parse_json_response(response: str) -> dict:
         end = response.rfind("}")
         if start != -1 and end != -1:
             response = response[start : end + 1]
-    
+
     return json.loads(response)
 
 
@@ -48,13 +48,13 @@ async def call_llm(
 ) -> str:
     """Helper to make a simple LLM call."""
     settings = Settings()
-    
+
     # Map models for Groq if selected
     if settings.llm_provider.lower() == "groq":
         model = "llama-3.3-70b-versatile"
-        
+
     client = get_llm_client(settings)
-    
+
     try:
         response = await client.chat.completions.create(
             model=model,

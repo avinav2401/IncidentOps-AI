@@ -37,13 +37,9 @@ class SlackWebhookHandler(OutputHandler):
         channel_id = config.get("channel_id") or os.getenv("SLACK_CHANNEL", "")
 
         if webhook_url:
-            return await self._post_via_webhook(
-                webhook_url, result_text, success, agent_name, duration_seconds, error
-            )
+            return await self._post_via_webhook(webhook_url, result_text, success, agent_name, duration_seconds, error)
         elif bot_token and channel_id:
-            return await self._post_via_api(
-                bot_token, channel_id, result_text, success, agent_name, duration_seconds, error
-            )
+            return await self._post_via_api(bot_token, channel_id, result_text, success, agent_name, duration_seconds, error)
         else:
             return OutputResult(
                 success=False,
@@ -70,25 +66,31 @@ class SlackWebhookHandler(OutputHandler):
         ]
 
         if not success:
-            blocks.append({
-                "type": "section",
-                "text": {"type": "mrkdwn", "text": f"*Error:* {error or 'Unknown'}"},
-            })
+            blocks.append(
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": f"*Error:* {error or 'Unknown'}"},
+                }
+            )
         else:
             # Truncate for Slack's 3000 char block limit
             text = result_text[:2900] + "..." if len(result_text) > 2900 else result_text
-            blocks.append({
-                "type": "section",
-                "text": {"type": "mrkdwn", "text": text},
-            })
+            blocks.append(
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": text},
+                }
+            )
 
         if duration_seconds is not None:
-            blocks.append({
-                "type": "context",
-                "elements": [
-                    {"type": "mrkdwn", "text": f"_Duration: {duration_seconds:.1f}s_"},
-                ],
-            })
+            blocks.append(
+                {
+                    "type": "context",
+                    "elements": [
+                        {"type": "mrkdwn", "text": f"_Duration: {duration_seconds:.1f}s_"},
+                    ],
+                }
+            )
 
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
@@ -103,9 +105,7 @@ class SlackWebhookHandler(OutputHandler):
 
         except Exception as e:
             _structured_log("slack_webhook_failed", error=str(e))
-            return OutputResult(
-                success=False, destination_type=self.destination_type, error=str(e)
-            )
+            return OutputResult(success=False, destination_type=self.destination_type, error=str(e))
 
     async def _post_via_api(
         self,
@@ -168,6 +168,4 @@ class SlackWebhookHandler(OutputHandler):
                     )
         except Exception as e:
             _structured_log("slack_api_failed", error=str(e))
-            return OutputResult(
-                success=False, destination_type=self.destination_type, error=str(e)
-            )
+            return OutputResult(success=False, destination_type=self.destination_type, error=str(e))

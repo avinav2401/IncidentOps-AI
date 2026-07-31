@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 class UserRead(BaseModel):
     """Public user representation (no password)."""
+
     id: str
     name: str
     email: str
@@ -28,6 +29,7 @@ class LoginResponse(BaseModel):
 
 class TokenPayload(BaseModel):
     """Internal model for decoded JWT claims."""
+
     sub: str  # user id
     email: str
     role: str
