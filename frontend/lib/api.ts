@@ -1,4 +1,4 @@
-import type { Incident, AuthResponse, User, Severity, IncidentStatus } from "@/lib/types";
+import type { Incident, AuthResponse, User, Severity, IncidentStatus, AuditEvent, IncidentKnowledge, Runbook, PostmortemReport } from "@/lib/types";
 import { getIncident as getMockIncident, incidents as mockIncidents } from "@/lib/mock-data";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:8000";
@@ -181,6 +181,39 @@ export async function getMe(): Promise<User | null> {
 }
 
 // --- Incident Endpoints ---
+
+export async function fetchAuditHistory(): Promise<AuditEvent[]> {
+  const res = await fetch(`${apiBase}/audit/history`, {
+    headers: { Authorization: `Bearer ${getToken()}` },
+  });
+  if (!res.ok) throw new Error("Failed to fetch audit history");
+  return res.json();
+}
+
+export async function fetchKnowledgeIncidents(): Promise<IncidentKnowledge[]> {
+  const res = await fetch(`${apiBase}/knowledge/incidents`, {
+    headers: { Authorization: `Bearer ${getToken()}` },
+  });
+  if (!res.ok) throw new Error("Failed to fetch knowledge base incidents");
+  return res.json();
+}
+
+export async function fetchRunbooks(): Promise<Runbook[]> {
+  const res = await fetch(`${apiBase}/knowledge/runbooks`, {
+    headers: { Authorization: `Bearer ${getToken()}` },
+  });
+  if (!res.ok) throw new Error("Failed to fetch runbooks");
+  return res.json();
+}
+
+export async function fetchPostmortemReport(incidentId: string): Promise<PostmortemReport> {
+  const res = await fetch(`${apiBase}/reports/${incidentId}/json`, {
+    headers: { Authorization: `Bearer ${getToken()}` },
+  });
+  if (!res.ok) throw new Error("Failed to fetch report");
+  return res.json();
+}
+
 
 export async function fetchIncidents(): Promise<Incident[]> {
   const remote = await request<any>("/incidents");

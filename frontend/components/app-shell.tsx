@@ -9,33 +9,42 @@ import {
   Activity,
   BarChart3,
   Bell,
+  BookOpen,
   Bot,
   ChevronDown,
   Command,
+  FileText,
   LayoutDashboard,
+  Layers,
   Menu,
   Search,
   Settings,
   ShieldAlert,
+  User,
   Users,
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 const mainNavigation: { label: string; href: string; icon: LucideIcon }[] = [
-  { label: "Overview", href: "/", icon: LayoutDashboard },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Incidents", href: "/incidents", icon: ShieldAlert },
-  { label: "Agents", href: "/agents", icon: Bot },
+  { label: "AI Investigation", href: "/agents", icon: Bot },
   { label: "Analytics", href: "/analytics", icon: BarChart3 },
+];
+
+const intelligenceNavigation: { label: string; href: string; icon: LucideIcon }[] = [
+  { label: "Knowledge Base", href: "/knowledge", icon: BookOpen },
+  { label: "Reports", href: "/reports", icon: FileText },
 ];
 
 function Navigation({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
-  const isActive = (href: string) => href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const isActive = (href: string) => pathname.startsWith(href);
 
   return (
     <nav className="flex h-full flex-col px-3 py-5" aria-label="Main navigation">
-      <Link href="/" className="focus-ring mb-9 flex items-center gap-3 rounded-xl px-3 py-2" onClick={onNavigate}>
+      <Link href="/dashboard" className="focus-ring mb-9 flex items-center gap-3 rounded-xl px-3 py-2" onClick={onNavigate}>
         <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-sky-400 to-indigo-500 text-slate-950 shadow-glow-blue">
           <Activity size={20} strokeWidth={2.6} />
         </span>
@@ -65,8 +74,35 @@ function Navigation({ onNavigate }: { onNavigate?: () => void }) {
         })}
       </div>
 
+      <p className="eyebrow px-3 pb-2 mt-6">Intelligence</p>
+      <div className="space-y-1">
+        {intelligenceNavigation.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={onNavigate}
+              className={`focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${active ? "bg-sky-400/10 font-medium text-sky-100 shadow-[inset_0_0_0_1px_rgba(56,189,248,0.14)]" : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-100"}`}
+            >
+              <Icon size={18} strokeWidth={active ? 2.35 : 1.9} />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+
       <div className="mt-auto space-y-1 border-t border-slate-700/50 pt-4">
         <p className="eyebrow px-3 pb-2">Management</p>
+        <Link
+          href="/integrations"
+          onClick={onNavigate}
+          className={`focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${isActive("/integrations") ? "bg-sky-400/10 font-medium text-sky-100" : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-100"}`}
+        >
+          <Layers size={18} strokeWidth={1.9} />
+          Integrations
+        </Link>
         <Link
           href="/users"
           onClick={onNavigate}
@@ -82,6 +118,14 @@ function Navigation({ onNavigate }: { onNavigate?: () => void }) {
         >
           <Settings size={18} strokeWidth={1.9} />
           Settings
+        </Link>
+        <Link
+          href="/profile"
+          onClick={onNavigate}
+          className={`focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${isActive("/profile") ? "bg-sky-400/10 font-medium text-sky-100" : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-100"}`}
+        >
+          <User size={18} strokeWidth={1.9} />
+          Profile
         </Link>
         <div className="mt-3 rounded-xl border border-emerald-400/10 bg-emerald-400/[0.045] px-3 py-3">
           <div className="flex items-center gap-2 text-xs font-medium text-emerald-200"><span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,.8)]" />All systems operational</div>
@@ -200,7 +244,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     <div className="mx-auto mb-2 grid h-10 w-10 place-items-center rounded-full bg-slate-800">
                       <Bell size={16} className="text-slate-400" />
                     </div>
-                    You're all caught up!
+                    You&apos;re all caught up!
                   </div>
                 </div>
               )}

@@ -62,11 +62,11 @@ button {
 
 @layer components {
   .panel {
-    @apply rounded-2xl border border-slate-700/50 bg-[#0c1928]/85 shadow-glow backdrop-blur-sm;
+    @apply rounded-2xl border border-slate-700/50 bg-[#0c1928]/60 shadow-glow backdrop-blur-md transition-all duration-300;
   }
 
   .panel-soft {
-    @apply rounded-2xl border border-slate-700/40 bg-[#0a1726]/70;
+    @apply rounded-2xl border border-slate-700/40 bg-[#0a1726]/50 backdrop-blur-sm transition-all duration-300;
   }
 
   .eyebrow {
@@ -75,5 +75,15 @@ button {
 
   .focus-ring {
     @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07111f];
+  }
+}
+
+@layer utilities {
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  .glass {
+    @apply bg-white/5 border-white/10 backdrop-blur-md;
   }
 }

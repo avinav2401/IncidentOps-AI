@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, CheckCircle2, ChevronDown, CircleAlert, CircleCheck, Clock3, ExternalLink, FileText, Hash, LoaderCircle, MessageSquare, Play, ShieldCheck, Sparkles, Terminal, ThumbsDown, ThumbsUp, X } from "lucide-react";
+import { Bot, Check, CheckCircle2, ChevronDown, CircleAlert, CircleCheck, Clock3, ExternalLink, FileText, Hash, LoaderCircle, MessageSquare, Play, ShieldCheck, Sparkles, Terminal, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { triggerAnalysis, submitRecommendationDecision, fetchIncidentNotifications } from "@/lib/api";
 import type { Incident } from "@/lib/types";
 import { AIIndicator, Avatar, SeverityBadge, StatusBadge } from "@/components/ui";
+import { AIChat } from "@/components/ai-chat";
+import { useAuth } from "@/lib/auth-context";
 
 const eventIcons = {
   detection: CircleAlert,
@@ -27,6 +29,8 @@ export function IncidentDetail({ incident, onRefetch }: { incident: Incident, on
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<any>(null);
 
   const decide = async (nextDecision: "approved" | "rejected") => {
@@ -123,7 +127,23 @@ export function IncidentDetail({ incident, onRefetch }: { incident: Incident, on
             </section>
 
             <section className="panel p-5 sm:p-6" aria-labelledby="root-cause-heading">
-              <div className="flex items-center gap-2"><CircleAlert size={17} className="text-amber-300" /><h2 id="root-cause-heading" className="text-base font-semibold text-slate-100">Root Cause</h2></div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2"><CircleAlert size={17} className="text-amber-300" /><h2 id="root-cause-heading" className="text-base font-semibold text-slate-100">Root Cause</h2></div>
+                <AIIndicator label="Autoscaled analysis" />
+              </div>
+              
+              <div className="mt-4 flex items-center gap-4 border-b border-slate-700/40 pb-4">
+                <div className="flex flex-col">
+                  <span className="text-xs text-slate-500">Confidence Score</span>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-2xl font-bold text-emerald-400">{incident.analysis.confidence}%</span>
+                    <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-800">
+                      <div className="h-full bg-emerald-400" style={{ width: `${incident.analysis.confidence}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="mt-4 rounded-xl border border-amber-400/15 bg-amber-400/[0.055] p-4"><p className="text-sm leading-7 text-amber-50/90">{incident.analysis.rootCause}</p></div>
             </section>
 
@@ -211,6 +231,20 @@ export function IncidentDetail({ incident, onRefetch }: { incident: Incident, on
           <div className="mt-5 divide-y divide-slate-700/35 rounded-xl border border-slate-700/45"><div className="grid grid-cols-[68px_minmax(110px,0.8fr)_minmax(130px,1fr)_minmax(0,2fr)] gap-3 bg-slate-800/30 px-3 py-2.5 text-[10px] uppercase tracking-[0.1em] text-slate-500 sm:px-4"><span>Time</span><span>Actor</span><span>Action</span><span>Detail</span></div>{incident.auditHistory.map((event, index) => <div key={`${event.time}-${event.action}-${index}`} className="grid grid-cols-[68px_minmax(110px,0.8fr)_minmax(130px,1fr)_minmax(0,2fr)] gap-3 px-3 py-3 text-xs sm:px-4"><span className="text-slate-600">{event.time}</span><span className="font-medium text-slate-300">{event.actor}</span><span className="text-slate-400">{event.action}</span><span className="text-slate-500">{event.detail}</span></div>)}</div>
         </section>
       </div>
+      
+      {/* Ask AI Floating Button */}
+      {!chatOpen && (
+        <button
+          onClick={() => setChatOpen(true)}
+          className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-sky-500 px-4 py-3 text-sm font-semibold text-white shadow-xl shadow-sky-500/25 transition hover:bg-sky-400 hover:-translate-y-1 hover:shadow-sky-400/30"
+        >
+          <Bot size={18} />
+          Ask AI
+        </button>
+      )}
+
+      {/* AI Chat Component */}
+      {chatOpen && <AIChat incidentId={incident.id} onClose={() => setChatOpen(false)} />}
     </div>
   );
 }

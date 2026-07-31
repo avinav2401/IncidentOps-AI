@@ -8,6 +8,7 @@ from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
+import random
 
 from app.agents.orchestrator import run_pipeline
 from app.agents.post_approval_pipeline import run_post_approval_pipeline
@@ -56,6 +57,36 @@ def create_incident(
     user: User = Depends(get_current_user),
 ) -> IncidentRead:
     return IncidentRead.model_validate(svc.create_incident(db, payload, user.name))
+
+
+@router.post("/simulate", response_model=IncidentRead, status_code=status.HTTP_201_CREATED, summary="Simulate a chaos event")
+def simulate_incident(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> IncidentRead:
+    services = ["Payment Service", "API Gateway", "Database", "Redis Cache", "Inventory System", "Notification Service"]
+    issues = [
+        ("Memory Leak", "OOM (Out of Memory) errors detected causing CrashLoopBackOff.", "P1", 12500),
+        ("High Latency", "API requests timing out after 30s.", "P2", 4500),
+        ("Connection Refused", "Database connections failing.", "P1", 15000),
+        ("Replication Lag", "Read replicas falling behind primary.", "P3", 1200),
+        ("CPU Spikes", "Service consuming 100% CPU.", "P2", 3000)
+    ]
+    
+    svc_name = random.choice(services)
+    issue_title, desc, severity, users = random.choice(issues)
+    
+    payload = IncidentCreate(
+        title=f"[{svc_name}] {issue_title}",
+        description=f"Automated chaos engineering simulation: {desc} Affecting critical paths.",
+        service=svc_name,
+        severity=severity,
+        status=IncidentState.OPEN,
+        affected_users=users,
+        tags=["simulated", "chaos"],
+        source="Chaos Simulator"
+    )
+    return IncidentRead.model_validate(svc.create_incident(db, payload, "Simulator"))
 
 
 @router.get("/incidents/{incident_id}", response_model=IncidentDetail, summary="Get incident detail")

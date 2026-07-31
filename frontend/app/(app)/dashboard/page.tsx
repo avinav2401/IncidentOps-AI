@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, CheckCircle2, ChevronRight, Clock3, ShieldAlert, Siren, Sparkles, TrendingDown, TrendingUp, Zap } from "lucide-react";
+import { ArrowRight, CheckCircle2, ChevronRight, Clock3, ShieldAlert, Siren, Sparkles, TrendingDown, TrendingUp, Zap, Activity } from "lucide-react";
 import { activityEvents } from "@/lib/mock-data";
 import { AIIndicator, Avatar, MetricLink, PageTitle, SeverityBadge, StatusBadge } from "@/components/ui";
+import { ServiceGraph } from "@/components/service-graph";
 import { fetchIncidents, fetchAnalytics } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -135,6 +136,17 @@ export default function DashboardPage() {
           </div>
           <Link href="/agents" className="focus-ring mt-6 flex items-center justify-center gap-2 rounded-xl border border-slate-700/60 bg-slate-800/35 px-3 py-2.5 text-xs font-medium text-slate-300 transition hover:border-slate-600 hover:bg-slate-800/70 hover:text-white">Open agent workspace <ArrowRight size={14} /></Link>
         </aside>
+      </section>
+
+      {/* ── Service Graph ── */}
+      <section className="mt-6 panel flex flex-col" aria-label="Service dependencies">
+        <div className="flex items-center gap-2 border-b border-slate-700/60 p-5">
+          <Activity size={16} className="text-emerald-400" />
+          <h2 className="text-sm font-semibold text-slate-100">Service Topology</h2>
+        </div>
+        <div className="flex-1 p-5 min-h-[300px]">
+          <ServiceGraph incidents={incidents} />
+        </div>
       </section>
 
       <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(310px,0.75fr)]">

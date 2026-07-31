@@ -83,3 +83,34 @@ export interface ActivityEvent {
   message: string;
   tone: "info" | "success" | "warning";
 }
+
+export interface IncidentKnowledge {
+  id: string;
+  title: string;
+  service: string;
+  severity: string;
+  root_cause: string;
+  resolution: string;
+  date: string;
+}
+
+export interface Runbook {
+  id: string;
+  title: string;
+  service: string;
+  description: string;
+  steps: string[];
+}
+
+export interface PostmortemReport {
+  incident_id: string;
+  title: string;
+  service: string;
+  severity: string;
+  duration: string;
+  root_cause: string;
+  action_taken: string;
+  metrics_summary: string[];
+  lessons_learned: string[];
+}
+
