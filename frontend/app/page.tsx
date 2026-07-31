@@ -71,6 +71,7 @@ export default function DashboardPage() {
             </Link>
           </div>
         }
+      />
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Incident overview statistics">
         {dashboardMetrics.map((metric, index) => {
