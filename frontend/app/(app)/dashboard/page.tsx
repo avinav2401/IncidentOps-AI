@@ -145,7 +145,7 @@ export default function DashboardPage() {
           <h2 className="text-sm font-semibold text-slate-100">Service Topology</h2>
         </div>
         <div className="flex-1 p-5 min-h-[300px]">
-          <ServiceGraph incidents={incidents} />
+          <ServiceGraph />
         </div>
       </section>
 

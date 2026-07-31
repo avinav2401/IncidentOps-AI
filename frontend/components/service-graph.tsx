@@ -8,7 +8,9 @@ import type { Incident } from "@/lib/types";
 
 // Custom Node Component
 const CustomNode = ({ data }: NodeProps) => {
-  const { label, icon: Icon, status } = data;
+  const label = data.label as string;
+  const status = data.status as string;
+  const Icon = data.icon as React.ElementType;
   
   let borderColor = 'border-slate-700/60';
   let bgColor = 'bg-slate-800/80';
@@ -56,7 +58,7 @@ const CustomNode = ({ data }: NodeProps) => {
 
 const nodeTypes = { custom: CustomNode };
 
-export function ServiceGraph({ affectedService, status }: { affectedService: string, status: string }) {
+export function ServiceGraph({ affectedService, status }: { affectedService?: string, status?: string }) {
   // Determine statuses based on affected service
   const getStatus = (serviceName: string) => {
     if (status === 'resolved') return 'healthy';

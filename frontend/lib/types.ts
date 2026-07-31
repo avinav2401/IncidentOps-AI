@@ -64,6 +64,8 @@ export interface Incident {
       risk: "Low" | "Medium" | "High";
       estimatedRecovery: string;
     };
+    evidenceChain?: { step: string; type: "observation" | "deduction" | "conclusion" }[];
+    similarIncidents?: string[];
   } | null;
   auditHistory: AuditEvent[];
 }

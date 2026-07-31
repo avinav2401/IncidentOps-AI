@@ -8,6 +8,10 @@ import { AIIndicator, Avatar, SeverityBadge, StatusBadge } from "@/components/ui
 import { AIChat } from "@/components/ai-chat";
 import { MultiAgentProgress } from "@/components/multi-agent-progress";
 import { LiveMetrics } from "@/components/live-metrics";
+import { ServiceGraph } from "@/components/service-graph";
+import { IncidentReplay } from "@/components/incident-replay";
+import { DecisionTree } from "@/components/decision-tree";
+import { TimelineComments } from "@/components/timeline-comments";
 import { useAuth } from "@/lib/auth-context";
 
 const eventIcons = {
@@ -29,8 +33,24 @@ const eventTones = {
 export function IncidentDetail({ incident, onRefetch }: { incident: Incident, onRefetch?: () => void }) {
   const [decision, setDecision] = useState<"approved" | "rejected" | null>(null);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  
+  // Replay State
+  const [isReplaying, setIsReplaying] = useState(false);
+  const [scrubIndex, setScrubIndex] = useState(incident.timeline.length);
+
+  // When incident updates, update scrub index if not replaying
+  useEffect(() => {
+    if (!isReplaying) {
+      setScrubIndex(incident.timeline.length);
+    }
+  }, [incident.timeline.length, isReplaying]);
+
+  const visibleTimeline = isReplaying ? incident.timeline.slice(0, scrubIndex) : incident.timeline;
+  // Artificially cut logs down based on replay progress (approximate by index percentage)
+  const logLimit = isReplaying ? Math.max(1, Math.floor((scrubIndex / incident.timeline.length) * incident.logs.length)) : incident.logs.length;
+  const visibleLogs = incident.logs.slice(0, logLimit);
   const [chatOpen, setChatOpen] = useState(false);
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<any>(null);
@@ -124,28 +144,48 @@ export function IncidentDetail({ incident, onRefetch }: { incident: Incident, on
       </section>
 
       <div className="mt-6 space-y-6">
+        
+        <ServiceGraph affectedService={incident.service} status={incident.status} />
+
+        <IncidentReplay 
+          incident={incident} 
+          isActive={isReplaying} 
+          onToggleActive={() => setIsReplaying(!isReplaying)} 
+          onScrub={setScrubIndex} 
+        />
+
         <section className="panel p-5 sm:p-6" aria-labelledby="timeline-heading">
-          <div className="flex items-start justify-between gap-3"><div><h2 id="timeline-heading" className="text-base font-semibold text-slate-100">Timeline</h2><p className="mt-1 text-xs text-slate-500">A unified record of detection, response, and automated investigation.</p></div><span className="rounded-lg border border-slate-700/50 bg-slate-800/35 px-2 py-1 text-[10px] font-medium text-slate-400">{incident.timeline.length} events</span></div>
+          <div className="flex items-start justify-between gap-3"><div><h2 id="timeline-heading" className="text-base font-semibold text-slate-100">Timeline</h2><p className="mt-1 text-xs text-slate-500">A unified record of detection, response, and automated investigation.</p></div><span className="rounded-lg border border-slate-700/50 bg-slate-800/35 px-2 py-1 text-[10px] font-medium text-slate-400">{visibleTimeline.length} events</span></div>
           <ol className="mt-6 space-y-0">
-            {incident.timeline.map((event, index) => {
+            {visibleTimeline.map((event, index) => {
               const Icon = eventIcons[event.kind];
-              return <li key={`${event.time}-${event.title}-${index}`} className="relative flex gap-4 pb-6 last:pb-0">{index < incident.timeline.length - 1 && <span className="absolute left-[15px] top-8 h-[calc(100%-21px)] w-px bg-slate-700/55" />}<span className={`relative z-10 grid h-8 w-8 shrink-0 place-items-center rounded-lg border ${eventTones[event.kind]}`}><Icon size={15} /></span><div className="min-w-0 pt-0.5"><div className="flex flex-wrap items-center gap-x-3 gap-y-1"><h3 className="text-sm font-medium text-slate-200">{event.title}</h3><time className="text-[11px] text-slate-600">{event.time}</time></div><p className="mt-1 text-sm leading-6 text-slate-500">{event.description}</p></div></li>;
+              return <li key={`${event.time}-${event.title}-${index}`} className="relative flex gap-4 pb-6 last:pb-0">{index < visibleTimeline.length - 1 && <span className="absolute left-[15px] top-8 h-[calc(100%-21px)] w-px bg-slate-700/55" />}<span className={`relative z-10 grid h-8 w-8 shrink-0 place-items-center rounded-lg border ${eventTones[event.kind]}`}><Icon size={15} /></span><div className="min-w-0 pt-0.5"><div className="flex flex-wrap items-center gap-x-3 gap-y-1"><h3 className="text-sm font-medium text-slate-200">{event.title}</h3><time className="text-[11px] text-slate-600">{event.time}</time></div><p className="mt-1 text-sm leading-6 text-slate-500">{event.description}</p></div></li>;
             })}
           </ol>
+          
+          <TimelineComments incidentId={incident.id} />
         </section>
 
         <LiveMetrics incidentStatus={incident.status} />
 
         <section className="panel overflow-hidden mt-6" aria-labelledby="logs-heading">
           <div className="flex items-start justify-between border-b border-slate-700/45 px-5 py-4 sm:px-6"><div><h2 id="logs-heading" className="text-base font-semibold text-slate-100">Logs</h2><p className="mt-1 text-xs text-slate-500">Correlated evidence selected by the Log Agent.</p></div><AIIndicator label="Correlated" /></div>
-          <div className="overflow-x-auto bg-[#07121e]/70 p-1.5 sm:p-2"><div className="min-w-[670px] overflow-hidden rounded-xl border border-slate-700/45 font-mono text-[11px] leading-6"><div className="grid grid-cols-[110px_72px_130px_1fr] border-b border-slate-700/40 bg-slate-800/35 px-3 py-2 text-[10px] uppercase tracking-[0.12em] text-slate-500"><span>Time</span><span>Level</span><span>Source</span><span>Message</span></div>{incident.logs.map((log, index) => <div key={`${log.time}-${index}`} className="grid grid-cols-[110px_72px_130px_1fr] border-b border-slate-800/70 px-3 py-2 text-slate-400 last:border-0"><span className="text-slate-600">{log.time}</span><span className={log.level === "ERROR" ? "text-rose-300" : log.level === "WARN" ? "text-amber-300" : "text-sky-300"}>{log.level}</span><span className="text-violet-200">{log.source}</span><span className="text-slate-300">{log.message}</span></div>)}</div></div>
+          <div className="overflow-x-auto bg-[#07121e]/70 p-1.5 sm:p-2"><div className="min-w-[670px] overflow-hidden rounded-xl border border-slate-700/45 font-mono text-[11px] leading-6"><div className="grid grid-cols-[110px_72px_130px_1fr] border-b border-slate-700/40 bg-slate-800/35 px-3 py-2 text-[10px] uppercase tracking-[0.12em] text-slate-500"><span>Time</span><span>Level</span><span>Source</span><span>Message</span></div>{visibleLogs.map((log, index) => <div key={`${log.time}-${index}`} className="grid grid-cols-[110px_72px_130px_1fr] border-b border-slate-800/70 px-3 py-2 text-slate-400 last:border-0"><span className="text-slate-600">{log.time}</span><span className={log.level === "ERROR" ? "text-rose-300" : log.level === "WARN" ? "text-amber-300" : "text-sky-300"}>{log.level}</span><span className="text-violet-200">{log.source}</span><span className="text-slate-300">{log.message}</span></div>)}</div></div>
         </section>
 
         {incident.analysis ? (
           <>
             <section className="panel overflow-hidden" aria-labelledby="analysis-heading">
               <div className="flex flex-col gap-3 border-b border-slate-700/45 bg-gradient-to-r from-violet-400/[0.08] to-transparent px-5 py-5 sm:flex-row sm:items-start sm:justify-between sm:px-6"><div><div className="flex items-center gap-2"><Sparkles size={17} className="text-violet-300" /><h2 id="analysis-heading" className="text-base font-semibold text-slate-100">AI Analysis</h2></div><p className="mt-1.5 text-xs text-slate-400">Synthesized from telemetry, logs, deployment history, and similar incidents.</p></div><span className="inline-flex w-fit items-center gap-1.5 rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1.5 text-xs font-semibold text-emerald-200"><CheckCircle2 size={13} />{incident.analysis.confidence}% confidence</span></div>
-              <div className="p-5 sm:p-6"><p className="text-sm leading-7 text-slate-300">{incident.analysis.summary}</p><div className="mt-5 grid gap-3 md:grid-cols-3">{incident.analysis.signals.map((signal, index) => <div key={signal} className="panel-soft p-3.5"><p className="eyebrow">Signal 0{index + 1}</p><p className="mt-2 text-xs leading-5 text-slate-300">{signal}</p></div>)}</div></div>
+              <div className="p-5 sm:p-6"><p className="text-sm leading-7 text-slate-300">{incident.analysis.summary}</p><div className="mt-5 grid gap-3 md:grid-cols-3">{incident.analysis.signals.map((signal, index) => <div key={signal} className="panel-soft p-3.5"><p className="eyebrow">Signal 0{index + 1}</p><p className="mt-2 text-xs leading-5 text-slate-300">{signal}</p></div>)}</div>
+              
+              {incident.analysis.evidenceChain && incident.analysis.evidenceChain.length > 0 && (
+                <div className="mt-6 border-t border-slate-700/30 pt-6">
+                  <h3 className="text-sm font-semibold text-slate-200 mb-3">AI Reasoning Trace</h3>
+                  <DecisionTree evidenceChain={incident.analysis.evidenceChain} />
+                </div>
+              )}
+              </div>
             </section>
 
             <section className="panel p-5 sm:p-6" aria-labelledby="root-cause-heading">
@@ -167,6 +207,19 @@ export function IncidentDetail({ incident, onRefetch }: { incident: Incident, on
               </div>
 
               <div className="mt-4 rounded-xl border border-amber-400/15 bg-amber-400/[0.055] p-4"><p className="text-sm leading-7 text-amber-50/90">{incident.analysis.rootCause}</p></div>
+              
+              {incident.analysis.similarIncidents && incident.analysis.similarIncidents.length > 0 && (
+                <div className="mt-5 pt-4 border-t border-slate-700/30">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Similar Past Incidents</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {incident.analysis.similarIncidents.map((incId) => (
+                      <span key={incId} className="inline-flex items-center gap-1 rounded-md bg-slate-800/60 px-2.5 py-1 text-xs font-medium text-sky-300 ring-1 ring-inset ring-sky-400/20">
+                        {incId}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </section>
 
             <section className="panel overflow-hidden" aria-labelledby="recommendation-heading">

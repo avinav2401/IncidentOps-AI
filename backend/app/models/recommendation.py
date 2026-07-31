@@ -25,6 +25,9 @@ class AIRecommendation(Base):
     status: Mapped[str] = mapped_column(String(30), nullable=False, default="pending_approval")
     # Proposed actions stored as JSON array text.
     proposed_actions_raw: Mapped[str] = mapped_column("proposed_actions", Text, nullable=False, default="[]")
+    evidence_chain_raw: Mapped[str | None] = mapped_column("evidence_chain", Text, nullable=True)
+    similar_incidents_raw: Mapped[str | None] = mapped_column("similar_incidents", Text, nullable=True)
+    
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -45,6 +48,28 @@ class AIRecommendation(Base):
     def proposed_actions(self, value: list[str]) -> None:
         self.proposed_actions_raw = json.dumps(value) if value else "[]"
 
+    @property
+    def evidence_chain(self) -> list[dict]:
+        try:
+            return json.loads(self.evidence_chain_raw) if self.evidence_chain_raw else []
+        except json.JSONDecodeError:
+            return []
+
+    @evidence_chain.setter
+    def evidence_chain(self, value: list[dict]) -> None:
+        self.evidence_chain_raw = json.dumps(value) if value else "[]"
+
+    @property
+    def similar_incidents(self) -> list[str]:
+        try:
+            return json.loads(self.similar_incidents_raw) if self.similar_incidents_raw else []
+        except json.JSONDecodeError:
+            return []
+
+    @similar_incidents.setter
+    def similar_incidents(self, value: list[str]) -> None:
+        self.similar_incidents_raw = json.dumps(value) if value else "[]"
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
@@ -55,6 +80,8 @@ class AIRecommendation(Base):
             "risk": self.risk,
             "status": self.status,
             "proposed_actions": self.proposed_actions,
+            "evidence_chain": self.evidence_chain,
+            "similar_incidents": self.similar_incidents,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "approved_at": self.approved_at.isoformat() if self.approved_at else None,
             "approved_by": self.approved_by,

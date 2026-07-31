@@ -243,6 +243,8 @@ async def run_pipeline(incident_id: str) -> None:
             status="pending_approval",
         )
         rec.proposed_actions = recommendation_data["proposed_actions"]
+        rec.evidence_chain = root_cause.get("evidence_chain", [])
+        rec.similar_incidents = root_cause.get("similar_incidents", [])
         db.add(rec)
 
         step_duration = time.monotonic() - step_start

@@ -212,6 +212,23 @@ def update_incident(
     db.refresh(incident)
     return incident.to_dict()
 
+# ── Comments ───────────────────────────────────────────────────────────
+
+
+def add_comment(db: Session, incident_id: str, comment_text: str, actor: str = "Maya Chen") -> dict[str, Any] | None:
+    incident = db.query(Incident).filter(
+        (Incident.id == incident_id) | (Incident.incident_number == incident_id)
+    ).first()
+    if not incident:
+        return None
+        
+    real_id = incident.id
+    log = _add_log(db, real_id, "user_comment", comment_text, actor)
+    _add_audit(db, "incident", real_id, "incident.commented", actor, "User commented on incident.")
+    
+    db.commit()
+    db.refresh(log)
+    return log.to_dict()
 
 # ── Approve ────────────────────────────────────────────────────────────
 

@@ -24,6 +24,7 @@ from app.schemas.incident import (
     IncidentRead,
     IncidentUpdate,
     ResolutionRequest,
+    CommentRequest,
 )
 from app.services import incident_service as svc
 
@@ -178,6 +179,19 @@ def resolve_incident(
     if not incident:
         raise _not_found(incident_id)
     return IncidentRead.model_validate(incident)
+
+
+@router.post("/incidents/{incident_id}/comments", response_model=IncidentLogRead, summary="Add a comment to an incident")
+def add_comment(
+    incident_id: str,
+    payload: CommentRequest,
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+) -> IncidentLogRead:
+    log = svc.add_comment(db, incident_id, payload.content, payload.actor)
+    if not log:
+        raise _not_found(incident_id)
+    return IncidentLogRead.model_validate(log)
 
 
 @router.post("/incidents/{incident_id}/analyze", summary="Trigger AI analysis pipeline")

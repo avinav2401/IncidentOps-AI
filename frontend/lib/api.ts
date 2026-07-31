@@ -308,7 +308,9 @@ export async function fetchIncident(id: string): Promise<Incident | undefined> {
         rationale: rec.rationale,
         risk: rec.risk as "Low" | "Medium" | "High",
         estimatedRecovery: "5m"
-      }
+      },
+      evidenceChain: rec.evidence_chain || [],
+      similarIncidents: rec.similar_incidents || []
     } : null,
     auditHistory: remote.audit_logs?.map((a: any) => ({
       time: formatDate(a.created_at),
@@ -367,6 +369,15 @@ export async function createIncident(data: { title: string; description: string;
 export async function fetchAnalytics(): Promise<any> {
   const remote = await request<any>("/analytics");
   return remote;
+}
+
+export async function addComment(id: string, content: string, actor: string = "Maya Chen"): Promise<boolean> {
+  const payload = { content, actor };
+  const remote = await request<any>(`/incidents/${id}/comments`, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+  return !!remote;
 }
 
 export async function fetchIncidentNotifications(id: string): Promise<any> {
