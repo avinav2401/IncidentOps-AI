@@ -85,7 +85,7 @@ function endpoints(path: string) {
   return apiBase ? [`${apiBase}${normalized}`, `${apiBase}/api/v1${normalized}`] : [];
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T | undefined> {
+async function request<T>(path: string, init?: RequestInit): Promise<T | null> {
   const token = getToken();
   const headers = new Headers(init?.headers);
   if (!headers.has("Content-Type") && !(init?.body instanceof FormData)) {
@@ -116,7 +116,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T | undefin
       // API temporarily unavailable
     }
   }
-  return undefined;
+  return null;
 }
 
 import { supabase } from "./supabase";
@@ -267,9 +267,9 @@ export async function simulateIncident(): Promise<Incident | null> {
   } as unknown as Incident;
 }
 
-export async function fetchIncident(id: string): Promise<Incident | undefined> {
+export async function fetchIncident(id: string): Promise<Incident | null> {
   const remote = await request<any>(`/incidents/${id}`);
-  if (!remote) return getMockIncident(id);
+  if (!remote) return getMockIncident(id) || null;
 
   // Map backend IncidentDetail to frontend Incident structure
   const inc = remote.incident || remote;
@@ -368,7 +368,7 @@ export async function createIncident(data: { title: string; description: string;
 
 export async function fetchAnalytics(): Promise<any> {
   const remote = await request<any>("/analytics");
-  return remote;
+  return remote || {};
 }
 
 export async function addComment(id: string, content: string, actor: string = "Maya Chen"): Promise<boolean> {

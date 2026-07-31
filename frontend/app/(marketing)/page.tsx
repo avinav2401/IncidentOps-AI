@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { Activity, ArrowRight, BarChart3, Bot, Brain, CheckCircle2, ChevronRight, Clock3, FileText, GitBranch, Globe, Layers, Lock, MessageSquare, Play, Shield, ShieldCheck, Sparkles, Terminal, Users, Zap } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/lib/auth-context";
+import { useRouter } from "next/navigation";
 
 const features = [
   { icon: Bot, title: "Multi-Agent AI", description: "Six specialized agents investigate incidents in parallel — logs, metrics, deployments, and more.", color: "from-sky-400 to-cyan-400" },
@@ -20,14 +22,23 @@ const steps = [
   { step: "04", title: "Resolve", description: "Human approves the fix. System executes, verifies recovery, and generates a postmortem.", icon: CheckCircle2 },
 ];
 
-const pricing = [
-  { name: "Starter", price: "Free", description: "For small teams getting started.", features: ["5 incidents/month", "3 team members", "Basic AI analysis", "Email notifications", "7-day retention"], cta: "Start Free", highlighted: false },
-  { name: "Pro", price: "$49", description: "For growing engineering teams.", features: ["Unlimited incidents", "25 team members", "Advanced AI agents", "Slack + Jira integration", "90-day retention", "Custom runbooks", "PDF reports"], cta: "Start Free Trial", highlighted: true },
-  { name: "Enterprise", price: "Custom", description: "For organizations at scale.", features: ["Everything in Pro", "Unlimited team members", "SSO/SAML", "Dedicated support", "1-year retention", "API access", "Custom integrations", "SLA guarantee"], cta: "Contact Sales", highlighted: false },
-];
+
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
+  const { login } = useAuth();
+  const router = useRouter();
+
+  const handleDemoLogin = async () => {
+    setIsDemoLoading(true);
+    try {
+      await login("maya.chen@incidentops.dev", "demo123");
+      router.push("/dashboard");
+    } catch {
+      setIsDemoLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#06101b] text-slate-200">
@@ -43,7 +54,6 @@ export default function LandingPage() {
           <div className="hidden items-center gap-8 md:flex">
             <a href="#features" className="text-sm text-slate-400 transition hover:text-white">Features</a>
             <a href="#how-it-works" className="text-sm text-slate-400 transition hover:text-white">How it Works</a>
-            <a href="#pricing" className="text-sm text-slate-400 transition hover:text-white">Pricing</a>
           </div>
           <div className="flex items-center gap-3">
             <Link href="/login" className="hidden text-sm font-medium text-slate-300 transition hover:text-white md:block">Sign in</Link>
@@ -71,9 +81,9 @@ export default function LandingPage() {
             <Link href="/dashboard" className="group inline-flex items-center gap-2 rounded-xl bg-sky-500 px-6 py-3.5 text-sm font-semibold text-white shadow-xl shadow-sky-500/25 transition hover:bg-sky-400 hover:shadow-sky-400/30">
               Start Free <ArrowRight size={16} className="transition group-hover:translate-x-1" />
             </Link>
-            <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/50 px-6 py-3.5 text-sm font-semibold text-slate-300 transition hover:border-slate-600 hover:bg-slate-800/60 hover:text-white">
-              <Play size={16} /> Live Demo
-            </Link>
+            <button onClick={handleDemoLogin} disabled={isDemoLoading} className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/50 px-6 py-3.5 text-sm font-semibold text-slate-300 transition hover:border-slate-600 hover:bg-slate-800/60 hover:text-white disabled:opacity-75">
+              <Play size={16} /> {isDemoLoading ? "Starting Sandbox..." : "Live Demo"}
+            </button>
           </div>
           <div className="mt-12 flex items-center justify-center gap-6 text-xs text-slate-500">
             <span className="flex items-center gap-1.5"><CheckCircle2 size={13} className="text-emerald-400" /> No credit card</span>
@@ -136,42 +146,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Pricing ── */}
-      <section id="pricing" className="py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-400">Pricing</p>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">Simple, transparent pricing</h2>
-            <p className="mx-auto mt-4 max-w-xl text-base text-slate-400">Start free. Scale as you grow.</p>
-          </div>
-          <div className="mt-16 grid gap-6 lg:grid-cols-3">
-            {pricing.map((plan) => (
-              <article key={plan.name} className={`relative rounded-2xl border p-8 transition ${plan.highlighted ? "border-sky-400/40 bg-sky-400/[0.04] shadow-xl shadow-sky-500/[0.06]" : "border-slate-800/60 bg-slate-900/30"}`}>
-                {plan.highlighted && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-sky-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">Most popular</span>
-                )}
-                <h3 className="text-lg font-semibold text-white">{plan.name}</h3>
-                <p className="mt-1 text-sm text-slate-400">{plan.description}</p>
-                <p className="mt-6">
-                  <span className="text-4xl font-bold tracking-tight text-white">{plan.price}</span>
-                  {plan.price !== "Custom" && plan.price !== "Free" && <span className="text-sm text-slate-400">/month</span>}
-                </p>
-                <Link href="/dashboard" className={`mt-8 block rounded-xl py-3 text-center text-sm font-semibold transition ${plan.highlighted ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 hover:bg-sky-400" : "border border-slate-700 bg-slate-800/40 text-slate-300 hover:bg-slate-700/60 hover:text-white"}`}>
-                  {plan.cta}
-                </Link>
-                <ul className="mt-8 space-y-3">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2 text-sm text-slate-400">
-                      <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-emerald-400" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       {/* ── CTA ── */}
       <section className="border-t border-slate-800/60 bg-gradient-to-b from-sky-500/[0.04] to-transparent py-24">
