@@ -241,6 +241,32 @@ export async function fetchIncidents(): Promise<Incident[]> {
   })) as Incident[];
 }
 
+export async function simulateIncident(): Promise<Incident | null> {
+  const remote = await request<any>("/incidents/simulate", {
+    method: "POST"
+  });
+  if (!remote) return null;
+  return {
+    id: remote.incident_number || remote.id,
+    title: remote.title,
+    severity: mapSeverity(remote.severity),
+    service: remote.service,
+    status: mapStatus(remote.status),
+    assignee: remote.owner || "Unassigned",
+    createdAt: formatDate(remote.created_at),
+    updatedAt: formatDate(remote.updated_at),
+    description: remote.description,
+    impact: remote.affected_users ? `${remote.affected_users} users` : "Unknown",
+    affectedUsers: remote.affected_users ? `${remote.affected_users}` : "0",
+    duration: computeDuration(remote.created_at, remote.resolved_at),
+    tags: remote.tags || [],
+    timeline: [],
+    logs: [],
+    analysis: null,
+    auditHistory: []
+  } as unknown as Incident;
+}
+
 export async function fetchIncident(id: string): Promise<Incident | undefined> {
   const remote = await request<any>(`/incidents/${id}`);
   if (!remote) return getMockIncident(id);

@@ -6,7 +6,7 @@ import { ArrowRight, CheckCircle2, ChevronRight, Clock3, ShieldAlert, Siren, Spa
 import { activityEvents } from "@/lib/mock-data";
 import { AIIndicator, Avatar, MetricLink, PageTitle, SeverityBadge, StatusBadge } from "@/components/ui";
 import { ServiceGraph } from "@/components/service-graph";
-import { fetchIncidents, fetchAnalytics } from "@/lib/api";
+import { fetchIncidents, fetchAnalytics, simulateIncident } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
 const metricIcons = [Zap, Siren, CheckCircle2, Clock3];
@@ -57,7 +57,7 @@ export default function DashboardPage() {
             <button
               onClick={async () => {
                 try {
-                  await fetch("http://localhost:8000/api/v1/simulator/trigger", { method: "POST" });
+                  await simulateIncident();
                   window.location.reload();
                 } catch (e) {
                   console.error(e);

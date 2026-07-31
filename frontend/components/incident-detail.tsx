@@ -6,6 +6,8 @@ import { triggerAnalysis, submitRecommendationDecision, fetchIncidentNotificatio
 import type { Incident } from "@/lib/types";
 import { AIIndicator, Avatar, SeverityBadge, StatusBadge } from "@/components/ui";
 import { AIChat } from "@/components/ai-chat";
+import { MultiAgentProgress } from "@/components/multi-agent-progress";
+import { LiveMetrics } from "@/components/live-metrics";
 import { useAuth } from "@/lib/auth-context";
 
 const eventIcons = {
@@ -93,12 +95,30 @@ export function IncidentDetail({ incident, onRefetch }: { incident: Incident, on
               )}
               <button className="focus-ring inline-flex items-center gap-2 rounded-xl border border-slate-700/60 bg-slate-900/45 px-3 py-2 text-xs font-medium text-slate-300 hover:border-slate-600 hover:text-white"><MessageSquare size={14} />Notes</button><button className="focus-ring grid h-9 w-9 place-items-center rounded-xl border border-slate-700/60 bg-slate-900/45 text-slate-400 hover:border-slate-600 hover:text-white" aria-label="More incident options"><ChevronDown size={17} /></button></div>
           </div>
-          <div className="relative mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="panel-soft px-3.5 py-3"><p className="eyebrow">Service</p><p className="mt-1.5 text-sm font-medium text-slate-200">{incident.service}</p></div>
+          
+          {(() => {
+            const durationStr = incident.duration;
+            let durationMin = 0;
+            if (durationStr.includes('h') && durationStr.includes('m')) {
+              const parts = durationStr.split(' ');
+              durationMin = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+            } else if (durationStr.includes('h')) {
+              durationMin = parseInt(durationStr) * 60;
+            } else if (durationStr.includes('m')) {
+              durationMin = parseInt(durationStr);
+            }
+            const revenueLoss = `$${(durationMin * 150).toLocaleString()}`; // Base $150/min cost
+            
+            return (
+              <div className="relative mt-6 grid gap-3 sm:grid-cols-3 xl:grid-cols-5">
+                <div className="panel-soft px-3.5 py-3"><p className="eyebrow">Service</p><p className="mt-1.5 text-sm font-medium text-slate-200">{incident.service}</p></div>
             <div className="panel-soft px-3.5 py-3"><p className="eyebrow">Impact</p><p className="mt-1.5 text-sm font-medium text-slate-200">{incident.affectedUsers}</p></div>
-            <div className="panel-soft px-3.5 py-3"><p className="eyebrow">Duration</p><p className="mt-1.5 text-sm font-medium text-slate-200">{incident.duration}</p></div>
-            <div className="panel-soft px-3.5 py-3"><p className="eyebrow">Incident lead</p><div className="mt-1.5 flex items-center gap-2"><Avatar name={incident.assignee} small /><span className="text-sm font-medium text-slate-200">{incident.assignee}</span></div></div>
-          </div>
+                <div className="panel-soft px-3.5 py-3"><p className="eyebrow">Duration</p><p className="mt-1.5 text-sm font-medium text-slate-200">{incident.duration}</p></div>
+                <div className="panel-soft px-3.5 py-3"><p className="eyebrow text-rose-300">Revenue Loss</p><p className="mt-1.5 text-sm font-bold text-rose-200">{revenueLoss}</p></div>
+                <div className="panel-soft px-3.5 py-3"><p className="eyebrow">Incident lead</p><div className="mt-1.5 flex items-center gap-2"><Avatar name={incident.assignee} small /><span className="text-sm font-medium text-slate-200">{incident.assignee}</span></div></div>
+              </div>
+            );
+          })()}
         </div>
         <div className="flex flex-wrap gap-2 px-5 py-3.5 sm:px-7"><span className="text-xs text-slate-500">Tags</span>{incident.tags.map((tag) => <span key={tag} className="rounded-md border border-slate-700/55 bg-slate-800/35 px-2 py-1 text-[10px] font-medium text-slate-400">#{tag}</span>)}</div>
       </section>
@@ -114,7 +134,9 @@ export function IncidentDetail({ incident, onRefetch }: { incident: Incident, on
           </ol>
         </section>
 
-        <section className="panel overflow-hidden" aria-labelledby="logs-heading">
+        <LiveMetrics incidentStatus={incident.status} />
+
+        <section className="panel overflow-hidden mt-6" aria-labelledby="logs-heading">
           <div className="flex items-start justify-between border-b border-slate-700/45 px-5 py-4 sm:px-6"><div><h2 id="logs-heading" className="text-base font-semibold text-slate-100">Logs</h2><p className="mt-1 text-xs text-slate-500">Correlated evidence selected by the Log Agent.</p></div><AIIndicator label="Correlated" /></div>
           <div className="overflow-x-auto bg-[#07121e]/70 p-1.5 sm:p-2"><div className="min-w-[670px] overflow-hidden rounded-xl border border-slate-700/45 font-mono text-[11px] leading-6"><div className="grid grid-cols-[110px_72px_130px_1fr] border-b border-slate-700/40 bg-slate-800/35 px-3 py-2 text-[10px] uppercase tracking-[0.12em] text-slate-500"><span>Time</span><span>Level</span><span>Source</span><span>Message</span></div>{incident.logs.map((log, index) => <div key={`${log.time}-${index}`} className="grid grid-cols-[110px_72px_130px_1fr] border-b border-slate-800/70 px-3 py-2 text-slate-400 last:border-0"><span className="text-slate-600">{log.time}</span><span className={log.level === "ERROR" ? "text-rose-300" : log.level === "WARN" ? "text-amber-300" : "text-sky-300"}>{log.level}</span><span className="text-violet-200">{log.source}</span><span className="text-slate-300">{log.message}</span></div>)}</div></div>
         </section>
@@ -158,9 +180,16 @@ export function IncidentDetail({ incident, onRefetch }: { incident: Incident, on
             </section>
           </>
         ) : (
-          <section className="panel p-5 sm:p-6 flex flex-col items-center justify-center text-slate-400">
-            <Sparkles size={24} className="mb-3 text-violet-400/50" />
-            <p className="text-sm">No AI analysis available yet. Trigger an analysis to begin.</p>
+          <section className="mt-8">
+            <MultiAgentProgress 
+              incidentStatus={incident.status} 
+              onComplete={() => {
+                // If it was just triggered to investigate, maybe reload after a few seconds or when done
+                if (incident.status === "investigating") {
+                  setTimeout(() => window.location.reload(), 1500);
+                }
+              }} 
+            />
           </section>
         )}
 
