@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import uuid
-from typing import List
 
-from pydantic import BaseModel, Field
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -22,8 +21,8 @@ class InviteRequest(BaseModel):
     email: str = Field(..., min_length=3, max_length=320)
     role: str = Field(..., min_length=2, max_length=40)
 
-@router.get("", response_model=List[UserRead], summary="List users in workspace")
-def list_users(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> List[UserRead]:
+@router.get("", response_model=list[UserRead], summary="List users in workspace")
+def list_users(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> list[UserRead]:
     if not current_user.workspace_id:
         # If user is not in a workspace, return just themself
         return [
@@ -35,7 +34,7 @@ def list_users(db: Session = Depends(get_db), current_user: User = Depends(get_c
                 avatar_initials=current_user.avatar_initials,
             )
         ]
-        
+
     users = db.query(User).filter(User.workspace_id == current_user.workspace_id).all()
     return [
         UserRead(
@@ -49,18 +48,18 @@ def list_users(db: Session = Depends(get_db), current_user: User = Depends(get_c
 
 @router.post("/invite", response_model=UserRead, summary="Invite a user to the workspace")
 def invite_user(
-    req: InviteRequest, 
-    db: Session = Depends(get_db), 
+    req: InviteRequest,
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin", "owner"))
 ) -> UserRead:
     if not current_user.workspace_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You must belong to a workspace to invite users")
-        
+
     if db.query(User).filter(User.email == req.email).first():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User with this email already exists")
 
     avatar_initials = "".join([part[0].upper() for part in req.name.split() if part])[:2]
-    
+
     # Default password for invited users is "demo123" (since there is no email integration yet)
     new_user = User(
         id=str(uuid.uuid4()),
@@ -71,11 +70,11 @@ def invite_user(
         role=req.role,
         avatar_initials=avatar_initials,
     )
-    
+
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    
+
     return UserRead(
         id=new_user.id,
         name=new_user.name,

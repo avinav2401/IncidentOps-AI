@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append('.')
 from app.database import SessionLocal
 from app.models.user import User

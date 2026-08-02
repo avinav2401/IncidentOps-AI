@@ -1,6 +1,7 @@
-import urllib.request
 import json
 import sys
+import urllib.request
+
 sys.path.append('.')
 from app.database import SessionLocal
 from app.models.user import User
