@@ -16,10 +16,12 @@ from app.services.auth_service import get_password_hash
 
 router = APIRouter(tags=["Users"], prefix="/users")
 
+
 class InviteRequest(BaseModel):
     name: str = Field(..., min_length=2, max_length=120)
     email: str = Field(..., min_length=3, max_length=320)
     role: str = Field(..., min_length=2, max_length=40)
+
 
 @router.get("", response_model=list[UserRead], summary="List users in workspace")
 def list_users(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> list[UserRead]:
@@ -43,14 +45,14 @@ def list_users(db: Session = Depends(get_db), current_user: User = Depends(get_c
             email=u.email,
             role=u.role,
             avatar_initials=u.avatar_initials,
-        ) for u in users
+        )
+        for u in users
     ]
+
 
 @router.post("/invite", response_model=UserRead, summary="Invite a user to the workspace")
 def invite_user(
-    req: InviteRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "owner"))
+    req: InviteRequest, db: Session = Depends(get_db), current_user: User = Depends(require_role("admin", "owner"))
 ) -> UserRead:
     if not current_user.workspace_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You must belong to a workspace to invite users")

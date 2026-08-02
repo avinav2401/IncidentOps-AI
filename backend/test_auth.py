@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append('.')
+sys.path.append(".")
 from app.database import SessionLocal
 from app.models.user import User
 from app.services.auth_service import create_access_token, decode_access_token

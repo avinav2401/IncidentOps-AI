@@ -10,10 +10,7 @@ async def fetch_recent_commits(service_name: str, workspace_id: str, db: Session
     """
     Fetches recent commits for the affected service from GitHub API.
     """
-    service_record = db.query(Service).filter(
-        Service.workspace_id == workspace_id,
-        Service.name == service_name
-    ).first()
+    service_record = db.query(Service).filter(Service.workspace_id == workspace_id, Service.name == service_name).first()
 
     if not service_record or not service_record.repository:
         return [f"No GitHub repository linked to service '{service_name}'."]
@@ -32,9 +29,7 @@ async def fetch_recent_commits(service_name: str, workspace_id: str, db: Session
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                api_url,
-                headers={"Accept": "application/vnd.github.v3+json", "User-Agent": "IncidentOps-AI"},
-                params={"per_page": 5}
+                api_url, headers={"Accept": "application/vnd.github.v3+json", "User-Agent": "IncidentOps-AI"}, params={"per_page": 5}
             )
 
             if response.status_code != 200:
