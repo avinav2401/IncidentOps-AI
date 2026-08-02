@@ -185,11 +185,9 @@ def resolve_incident(
     if not incident:
         raise _not_found(incident_id)
 
-    # Index into the knowledge base
-    recs = getattr(incident, "ai_recommendations", [])
+    detail = svc.get_detail(db, _user.workspace_id, incident_id)
+    recs = detail.get("ai_recommendations", []) if detail else []
     rec = recs[0] if recs else {}
-    if hasattr(rec, "__dict__"):
-        rec = rec.__dict__
 
     incident_dict = {
         "incident_number": incident.get("incident_number"),

@@ -61,47 +61,27 @@ async def get_current_user(
     """Resolve the current user from the ``Authorization: Bearer <token>``
     header.  In demo mode, requests without a token are served as the
     default incident commander."""
-    import logging
-    logger = logging.getLogger("auth_debug")
-    logger.setLevel(logging.INFO)
-    if not logger.handlers:
-        ch = logging.StreamHandler()
-        logger.addHandler(ch)
-
-    logger.info(f"get_current_user called. credentials={credentials}")
     if credentials and credentials.credentials:
         token = credentials.credentials
-        logger.info(f"Token received: {token[:10]}... (len: {len(token)})")
 
         # Try real JWT first.
         payload = decode_access_token(token)
-        logger.info(f"Decoded payload: {payload}")
         if payload:
             user = db.query(User).filter(User.id == payload.get("sub")).first()
-            logger.info(f"User queried from DB: {user}")
             if user:
                 return user
-            else:
-                logger.error(f"User with id {payload.get('sub')} not found in DB!")
-        else:
-            logger.error("Failed to decode token payload.")
 
         # Fallback: legacy demo token.
         demo_user = _try_demo_token(token, db)
         if demo_user:
-            logger.info("Demo user matched.")
             return demo_user
 
     # In demo mode, allow unauthenticated requests as the default user.
     if settings.demo_mode:
-        logger.info("Falling back to demo_mode incident_commander.")
         default = db.query(User).filter(User.role == "incident_commander").first()
         if default:
             return default
-        else:
-            logger.error("Demo mode is true, but no incident_commander found in DB!")
 
-    logger.error("Raising 401 Unauthorized.")
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Missing or invalid authentication token.",

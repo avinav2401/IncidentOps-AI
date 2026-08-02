@@ -20,8 +20,8 @@ class ReportAgent:
 
         logs = db.query(IncidentLog).filter(IncidentLog.incident_id == incident.id).all()
 
-        action_taken = recommendation.action if recommendation else "Manual resolution"
-        root_cause = incident.analysis or "Unknown"
+        action_taken = recommendation.title if recommendation else "Manual resolution"
+        root_cause = incident.resolution_summary or "Unknown"
 
         prompt = f"""
         You are an expert Site Reliability Engineer (SRE) writing a postmortem report.
@@ -75,6 +75,6 @@ class ReportAgent:
             "duration": duration,
             "root_cause": root_cause,
             "action_taken": action_taken,
-            "metrics_summary": [f"{log.level}: {log.message}" for log in logs[:3]],  # Using logs instead of metrics as fallback
+            "metrics_summary": [f"{log.event_type}: {log.message}" for log in logs[:3]],  # Using logs instead of metrics as fallback
             "lessons_learned": lessons,
         }

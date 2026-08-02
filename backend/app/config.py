@@ -61,6 +61,7 @@ class Settings(BaseSettings):
     jira_api_token: str = ""
     jira_project_key: str = ""
 
+    github_webhook_secret: str = ""
     pagerduty_webhook_secret: str = ""
 
     # ── AI / LLM configuration ────────────────────────────────────────

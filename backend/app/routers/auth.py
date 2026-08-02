@@ -30,7 +30,7 @@ def signup(req: SignupRequest, db: Session = Depends(get_db)) -> LoginResponse:
         name=req.name,
         email=req.email,
         hashed_password=get_password_hash(req.password),
-        role="admin",  # First user might be admin
+        role="responder",
         avatar_initials=avatar_initials,
     )
     db.add(new_user)

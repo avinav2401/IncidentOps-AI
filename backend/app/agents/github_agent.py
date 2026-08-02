@@ -21,6 +21,10 @@ async def fetch_recent_commits(service_name: str, workspace_id: str, db: Session
     if "github.com/" in repo:
         repo = repo.split("github.com/")[-1]
         
+    if repo.endswith(".git"):
+        repo = repo[:-4]
+    repo = repo.strip("/")
+        
     api_url = f"https://api.github.com/repos/{repo}/commits"
     
     try:

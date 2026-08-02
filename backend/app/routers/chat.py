@@ -37,7 +37,7 @@ async def chat_with_ai(incident_id: str, payload: ChatMessage, db: Session = Dep
     - Title: {incident.title}
     - Service: {incident.service}
     - Status: {incident.status}
-    - Root Cause Analysis: {incident.analysis or "Not yet completed"}
+    - Root Cause Analysis: {incident.resolution_summary or "Not yet completed"}
 
     User Question: {payload.message}
     """

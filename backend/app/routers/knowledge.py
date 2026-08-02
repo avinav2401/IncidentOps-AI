@@ -37,8 +37,8 @@ def get_knowledge_incidents(db: Session = Depends(get_db)):
         # Get the approved recommendation to find the resolution
         rec = db.query(AIRecommendation).filter(AIRecommendation.incident_id == inc.id, AIRecommendation.status == "approved").first()
 
-        resolution_text = rec.action if rec else "Resolved manually by operator."
-        root_cause_text = inc.analysis or "Unknown root cause."
+        resolution_text = f"{rec.title}: {rec.rationale}" if rec else "Resolved manually by operator."
+        root_cause_text = inc.resolution_summary or "Unknown root cause."
 
         knowledge_list.append(
             IncidentKnowledge(
