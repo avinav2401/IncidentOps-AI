@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.middleware.auth import get_current_user
+from app.middleware.auth import get_current_user, require_role
 from app.models.service import Service
 from app.models.user import User
 
@@ -27,7 +27,7 @@ class ServiceCreate(BaseModel):
 
 
 @router.post("", summary="Create a new service")
-def create_service(req: ServiceCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def create_service(req: ServiceCreate, db: Session = Depends(get_db), current_user: User = Depends(require_role("owner", "admin"))):
     if not current_user.workspace_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User must belong to a workspace to add a service")
 
@@ -50,7 +50,7 @@ def create_service(req: ServiceCreate, db: Session = Depends(get_db), current_us
 
 
 @router.get("", summary="List all services in workspace")
-def list_services(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def list_services(db: Session = Depends(get_db), current_user: User = Depends(require_role("owner", "admin", "auditor", "incident_commander", "responder", "sme", "observer", "external_stakeholder"))):
     if not current_user.workspace_id:
         return []
     services = db.query(Service).filter(Service.workspace_id == current_user.workspace_id).all()

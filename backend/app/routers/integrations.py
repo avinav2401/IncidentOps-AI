@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
-from app.middleware.auth import get_current_user
+from app.middleware.auth import get_current_user, require_role
 from app.models.audit_log import AuditLog
 from app.models.jira_sync import JiraSync
 from app.models.slack_message import SlackMessage
@@ -67,7 +67,7 @@ def _uid() -> str:
 def test_slack(
     payload: IntegrationTestRequest,
     db: Session = Depends(get_db),
-    _user: User = Depends(get_current_user),
+    _user: User = Depends(require_role("owner", "admin")),
 ) -> dict[str, Any]:
     msg = SlackMessage(
         id=f"slack_{_uid()}",
@@ -101,7 +101,7 @@ def test_slack(
 def test_jira(
     payload: IntegrationTestRequest,
     db: Session = Depends(get_db),
-    _user: User = Depends(get_current_user),
+    _user: User = Depends(require_role("owner", "admin")),
 ) -> dict[str, Any]:
     project = (payload.project_key or "OPS").upper()
     count = db.query(JiraSync).count()

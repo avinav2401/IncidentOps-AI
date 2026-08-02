@@ -13,10 +13,10 @@ def test_health_and_versioned_alias_are_available(client) -> None:
 
 
 def test_login_accepts_seeded_user_and_rejects_bad_password(client) -> None:
-    bad = client.post("/login", json={"email": "maya.chen@incidentops.dev", "password": "not-demo123"})
+    bad = client.post("/api/v1/auth/login", json={"email": "maya.chen@incidentops.dev", "password": "not-demo123"})
     assert bad.status_code == 401
 
-    response = client.post("/api/v1/login", json={"email": "maya.chen@incidentops.dev", "password": "demo123"})
+    response = client.post("/api/v1/auth/login", json={"email": "maya.chen@incidentops.dev", "password": "demo123"})
     assert response.status_code == 200
     body = response.json()
     assert body["token_type"] == "bearer"
@@ -26,7 +26,7 @@ def test_login_accepts_seeded_user_and_rejects_bad_password(client) -> None:
 
 
 def test_me_endpoint_returns_current_user(client, auth_headers) -> None:
-    response = client.get("/me", headers=auth_headers)
+    response = client.get("/auth/me", headers=auth_headers)
     assert response.status_code == 200
     assert response.json()["email"] == "maya.chen@incidentops.dev"
 
@@ -98,11 +98,14 @@ def test_analytics_agent_status_and_integration_tests(client, auth_headers) -> N
     assert agents["total"] == 4
     assert agents["healthy"] >= 1
 
-    slack = client.post("/slack/test", json={"channel": "#ops-test"}, headers=auth_headers)
+    admin_login = client.post("/auth/login", json={"email": "lena.ortiz@incidentops.dev", "password": "demo123"})
+    admin_headers = {"Authorization": f"Bearer {admin_login.json()['access_token']}"}
+
+    slack = client.post("/slack/test", json={"channel": "#ops-test"}, headers=admin_headers)
     assert slack.status_code == 200
     assert slack.json()["slack_message"]["channel"] == "#ops-test"
 
-    jira = client.post("/jira/test", json={"project_key": "INC"}, headers=auth_headers)
+    jira = client.post("/jira/test", json={"project_key": "INC"}, headers=admin_headers)
     assert jira.status_code == 200
     assert jira.json()["jira_sync"]["issue_key"].startswith("INC-")
 
@@ -115,13 +118,13 @@ def test_role_based_access_with_different_users(client) -> None:
         ("lena.ortiz@incidentops.dev", "admin"),
     ]
     for email, expected_role in users:
-        resp = client.post("/login", json={"email": email, "password": "demo123"})
+        resp = client.post("/auth/login", json={"email": email, "password": "demo123"})
         assert resp.status_code == 200
         assert resp.json()["user"]["role"] == expected_role
 
         # Use the token to access a protected endpoint.
         token = resp.json()["access_token"]
-        me = client.get("/me", headers={"Authorization": f"Bearer {token}"})
+        me = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
         assert me.status_code == 200
         assert me.json()["role"] == expected_role
 
@@ -141,10 +144,13 @@ def test_incident_update_and_delete(client, auth_headers) -> None:
     assert updated.status_code == 200
     assert updated.json()["title"] == "Updated incident title for test"
 
+    admin_login = client.post("/auth/login", json={"email": "lena.ortiz@incidentops.dev", "password": "demo123"})
+    admin_headers = {"Authorization": f"Bearer {admin_login.json()['access_token']}"}
+
     # Delete it.
-    deleted = client.delete(f"/incidents/{incident_id}", headers=auth_headers)
+    deleted = client.delete(f"/incidents/{incident_id}", headers=admin_headers)
     assert deleted.status_code == 204
 
     # Verify it's gone.
-    detail = client.get(f"/incidents/{incident_id}", headers=auth_headers)
+    detail = client.get(f"/incidents/{incident_id}", headers=admin_headers)
     assert detail.status_code == 404

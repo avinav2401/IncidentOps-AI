@@ -19,6 +19,7 @@ from app.models.jira_sync import JiraSync
 from app.models.recommendation import AIRecommendation
 from app.models.slack_message import SlackMessage
 from app.models.user import User
+from app.models.workspace import Workspace
 
 
 def _utcnow() -> datetime:
@@ -41,11 +42,14 @@ def seed_database(db: Session) -> None:
     def days(n: int) -> datetime:
         return now - timedelta(days=n)
 
+    workspace = Workspace(id="ws_demo", name="Demo Workspace", slug="demo-workspace", industry="Tech", company_size="50-100", owner_id="usr_maya")
+    db.add(workspace)
+
     # ── Users ──────────────────────────────────────────────────────────
     users = [
-        User(id="usr_maya", name="Maya Chen", email="maya.chen@incidentops.dev", role="incident_commander", avatar_initials="MC"),
-        User(id="usr_samir", name="Samir Patel", email="samir.patel@incidentops.dev", role="responder", avatar_initials="SP"),
-        User(id="usr_lena", name="Lena Ortiz", email="lena.ortiz@incidentops.dev", role="admin", avatar_initials="LO"),
+        User(id="usr_maya", workspace_id="ws_demo", name="Maya Chen", email="maya.chen@incidentops.dev", role="incident_commander", avatar_initials="MC"),
+        User(id="usr_samir", workspace_id="ws_demo", name="Samir Patel", email="samir.patel@incidentops.dev", role="responder", avatar_initials="SP"),
+        User(id="usr_lena", workspace_id="ws_demo", name="Lena Ortiz", email="lena.ortiz@incidentops.dev", role="admin", avatar_initials="LO"),
     ]
     db.add_all(users)
 
@@ -119,6 +123,7 @@ def seed_database(db: Session) -> None:
     for data in incidents_data:
         inc = Incident(
             id=data["id"],
+            workspace_id="ws_demo",
             incident_number=data["incident_number"],
             title=data["title"],
             description=data["description"],

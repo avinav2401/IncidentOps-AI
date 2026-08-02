@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.middleware.auth import get_current_user
+from app.middleware.auth import get_current_user, require_role
 from app.models.agent_status import AgentStatus
 from app.models.user import User
 
@@ -18,7 +18,7 @@ router = APIRouter(tags=["Agents"])
 @router.get("/agents/status", summary="AI agent fleet health")
 def agent_status(
     db: Session = Depends(get_db),
-    _user: User = Depends(get_current_user),
+    _user: User = Depends(require_role("owner", "admin", "incident_commander")),
 ) -> dict[str, Any]:
     agents = db.query(AgentStatus).all()
     agent_dicts = [a.to_dict() for a in agents]

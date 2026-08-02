@@ -64,7 +64,7 @@ def client():
 @pytest.fixture()
 def auth_headers(client: TestClient) -> dict[str, str]:
     """Get a valid Authorization header for the default demo user."""
-    response = client.post("/login", json={"email": "maya.chen@incidentops.dev", "password": "demo123"})
+    response = client.post("/auth/login", json={"email": "maya.chen@incidentops.dev", "password": "demo123"})
     assert response.status_code == 200, f"Login failed: {response.text}"
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}

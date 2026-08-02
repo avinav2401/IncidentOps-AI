@@ -12,7 +12,7 @@ from app.agents.knowledge_base import kb
 from app.agents.orchestrator import run_pipeline
 from app.agents.post_approval_pipeline import run_post_approval_pipeline
 from app.database import get_db
-from app.middleware.auth import get_current_user
+from app.middleware.auth import get_current_user, require_role
 from app.models.user import User
 from app.schemas.incident import (
     ApprovalRequest,
@@ -44,7 +44,7 @@ def list_incidents(
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
-    _user: User = Depends(get_current_user),
+    _user: User = Depends(require_role("owner", "admin", "auditor", "incident_commander", "responder", "sme", "observer", "external_stakeholder")),
 ) -> IncidentListResponse:
     rows, total = svc.list_incidents(db, _user.workspace_id, status_filter, severity, service, q, limit, offset)
     incidents = [IncidentRead.model_validate(row) for row in rows]
@@ -55,7 +55,7 @@ def list_incidents(
 def create_incident(
     payload: IncidentCreate,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_role("owner", "admin", "incident_commander", "automation")),
 ) -> IncidentRead:
     return IncidentRead.model_validate(svc.create_incident(db, user.workspace_id, payload, user.name))
 
@@ -63,7 +63,7 @@ def create_incident(
 @router.post("/simulate", response_model=IncidentRead, status_code=status.HTTP_201_CREATED, summary="Simulate a chaos event")
 def simulate_incident(
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_role("owner", "admin", "incident_commander", "automation")),
 ) -> IncidentRead:
     services = ["Payment Service", "API Gateway", "Database", "Redis Cache", "Inventory System", "Notification Service"]
     issues = [
@@ -94,7 +94,7 @@ def simulate_incident(
 def get_incident(
     incident_id: str,
     db: Session = Depends(get_db),
-    _user: User = Depends(get_current_user),
+    _user: User = Depends(require_role("owner", "admin", "auditor", "incident_commander", "responder", "sme", "observer", "external_stakeholder")),
 ) -> IncidentDetail:
     detail = svc.get_detail(db, _user.workspace_id, incident_id)
     if not detail:
@@ -107,7 +107,7 @@ def update_incident(
     incident_id: str,
     payload: IncidentUpdate,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_role("owner", "admin", "incident_commander", "automation")),
 ) -> IncidentRead:
     incident = svc.update_incident(db, user.workspace_id, incident_id, payload, user.name)
     if not incident:
@@ -119,7 +119,7 @@ def update_incident(
 def delete_incident(
     incident_id: str,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_role("owner", "admin")),
 ) -> Response:
     if not svc.delete_incident(db, user.workspace_id, incident_id, user.name):
         raise _not_found(incident_id)
@@ -130,7 +130,7 @@ def delete_incident(
 def get_incident_logs(
     incident_id: str,
     db: Session = Depends(get_db),
-    _user: User = Depends(get_current_user),
+    _user: User = Depends(require_role("owner", "admin", "auditor", "incident_commander", "responder", "sme", "observer", "external_stakeholder")),
 ) -> list[IncidentLogRead]:
     logs = svc.get_incident_logs(db, _user.workspace_id, incident_id)
     if logs is None:
@@ -144,7 +144,7 @@ def approve_incident(
     payload: ApprovalRequest,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    _user: User = Depends(get_current_user),
+    _user: User = Depends(require_role("owner", "admin", "incident_commander", "automation")),
 ) -> dict[str, Any]:
     result = svc.approve(db, _user.workspace_id, incident_id, payload)
     if not result:
@@ -173,7 +173,7 @@ def resolve_incident(
     incident_id: str,
     payload: ResolutionRequest,
     db: Session = Depends(get_db),
-    _user: User = Depends(get_current_user),
+    _user: User = Depends(require_role("owner", "admin", "incident_commander", "automation")),
 ) -> IncidentRead:
     incident = svc.resolve(db, _user.workspace_id, incident_id, payload)
     if not incident:
@@ -186,11 +186,11 @@ def resolve_incident(
         rec = rec.__dict__
 
     incident_dict = {
-        "incident_number": incident.incident_number,
-        "service": incident.service,
-        "severity": incident.severity,
-        "owner": incident.owner,
-        "description": incident.description,
+        "incident_number": incident.get("incident_number"),
+        "service": incident.get("service"),
+        "severity": incident.get("severity"),
+        "owner": incident.get("owner"),
+        "description": incident.get("description"),
     }
     kb.index_resolved_incident(incident_dict, rec)
 
@@ -202,7 +202,7 @@ def add_comment(
     incident_id: str,
     payload: CommentRequest,
     db: Session = Depends(get_db),
-    _user: User = Depends(get_current_user),
+    _user: User = Depends(require_role("owner", "admin", "incident_commander", "responder", "sme", "automation")),
 ) -> IncidentLogRead:
     log = svc.add_comment(db, _user.workspace_id, incident_id, payload.content, payload.actor)
     if not log:
@@ -215,7 +215,7 @@ async def trigger_ai_analysis(
     incident_id: str,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    _user: User = Depends(get_current_user),
+    _user: User = Depends(require_role("owner", "admin", "incident_commander", "responder", "sme", "automation")),
 ) -> dict[str, Any]:
     incident = svc.get_detail(db, _user.workspace_id, incident_id)
     if not incident:
@@ -229,7 +229,7 @@ async def trigger_ai_analysis(
 def get_notifications(
     incident_id: str,
     db: Session = Depends(get_db),
-    _user: User = Depends(get_current_user),
+    _user: User = Depends(require_role("owner", "admin", "auditor", "incident_commander", "responder", "sme", "observer", "external_stakeholder")),
 ) -> dict[str, Any]:
     result = svc.get_notifications(db, _user.workspace_id, incident_id)
     if result is None:

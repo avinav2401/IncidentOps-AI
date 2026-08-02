@@ -60,7 +60,7 @@ def login(req: LoginRequest, db: Session = Depends(get_db)) -> LoginResponse:
     # Fallback for demo users that don't have hashed passwords, or check proper hash
     if req.password == "demo123" and user.hashed_password == "":
         pass  # Allow demo login for seeded users
-    elif not verify_password(req.password, user.hashed_password):
+    elif not user.hashed_password or not verify_password(req.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
     token = create_access_token({"sub": user.id, "email": user.email, "role": user.role, "exp": int(time.time()) + 28800})

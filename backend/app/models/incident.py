@@ -18,7 +18,7 @@ class Incident(Base):
     incident_number: Mapped[str] = mapped_column(String(20), unique=True, nullable=False, index=True)
     title: Mapped[str] = mapped_column(String(180), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    service_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
+    service: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     severity: Mapped[str] = mapped_column(String(4), nullable=False, default="P2", index=True)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="Open", index=True)
     owner: Mapped[str | None] = mapped_column(String(120), nullable=True)
@@ -61,7 +61,7 @@ class Incident(Base):
             "incident_number": self.incident_number,
             "title": self.title,
             "description": self.description,
-            "service_id": self.service_id,
+            "service": self.service,
             "severity": self.severity,
             "status": self.status,
             "owner": self.owner,
