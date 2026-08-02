@@ -14,6 +14,8 @@ IncidentOps AI turns the noisy first minutes of an outage into an auditable work
 - **Real-time Pipeline Tracking:** Uses Server-Sent Events (SSE) to stream agent thoughts, steps, and execution timings directly to the frontend.
 - **Production-grade Security:** Secret scanning with Gitleaks in CI, strict constant-time HMAC-SHA256 signature verification for inbound webhooks (PagerDuty, Slack), IDOR protection via workspace isolation, XSS prevention, and a formal `SECURITY.md` policy.
 - Pluggable Output Handlers: An extensible registry for posting incident resolutions and AI recommendations to external platforms like Slack.
+- **Live GitHub Integration:** Dynamically fetches and analyzes recent commits from linked GitHub repositories via the GitHub REST API to help identify the root cause of an outage.
+- **Full User Management:** Fully functional team invitation system with role-based access control (RBAC), allowing admins to invite teammates as Commanders, Responders, or Viewers.
 - Enforces a comprehensive **9-Role Matrix** (Owner, Admin, Auditor, Incident Commander, Responder, SME, Observer, External Stakeholder, Automation) for highly granular, JWT-backed API access.
 - Captures operator decisions and lifecycle transitions in an immutable audit trail.
 - Surfaces operational analytics and agent health so teams can understand both incidents and the system investigating them.
@@ -172,9 +174,10 @@ Once you have the app running locally via Docker or local development, follow th
 | Method | Route | Purpose |
 | --- | --- | --- |
 | `POST` | `/login` | Exchange demo credentials for a JWT. |
+| `GET`, `POST` | `/users` | List users in the workspace or invite new users (`/users/invite`). |
 | `GET`, `POST` | `/incidents` | List incidents or create a new one. |
 | `GET` | `/incidents/{id}` | Read an incident, its evidence, and audit context. |
-| `POST` | `/incidents/{id}/analyze` | Trigger the AI orchestrator pipeline. |
+| `POST` | `/simulator/trigger` | Trigger a chaos incident and auto-start the AI orchestrator pipeline. |
 | `GET` | `/incidents/{id}/stream` | Stream real-time Server-Sent Events (SSE) from the AI pipeline. |
 | `POST` | `/incidents/{id}/approve` | Record a human approval for a recommendation. |
 | `POST` | `/incidents/{id}/resolve` | Resolve an incident and append the relevant audit event. |

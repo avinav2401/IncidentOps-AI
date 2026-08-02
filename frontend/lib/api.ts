@@ -85,7 +85,7 @@ function endpoints(path: string) {
   return apiBase ? [`${apiBase}${normalized}`, `${apiBase}/api/v1${normalized}`] : [];
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T | null> {
+export async function request<T>(path: string, init?: RequestInit): Promise<T | null> {
   const token = getToken();
   const headers = new Headers(init?.headers);
   if (!headers.has("Content-Type") && !(init?.body instanceof FormData)) {
@@ -176,7 +176,7 @@ export async function login(email: string, password: string): Promise<AuthRespon
 export async function getMe(): Promise<User | null> {
   const token = getToken();
   if (!token) return null;
-  const user = await request<User>("/me");
+  const user = await request<User>("/auth/me");
   return user ?? null;
 }
 
@@ -242,24 +242,25 @@ export async function fetchIncidents(): Promise<Incident[]> {
 }
 
 export async function simulateIncident(): Promise<Incident | null> {
-  const remote = await request<any>("/incidents/simulate", {
+  const remote = await request<any>("/simulator/trigger", {
     method: "POST"
   });
   if (!remote) return null;
+  const inc = remote.incident || remote;
   return {
-    id: remote.incident_number || remote.id,
-    title: remote.title,
-    severity: mapSeverity(remote.severity),
-    service: remote.service,
-    status: mapStatus(remote.status),
-    assignee: remote.owner || "Unassigned",
-    createdAt: formatDate(remote.created_at),
-    updatedAt: formatDate(remote.updated_at),
-    description: remote.description,
-    impact: remote.affected_users ? `${remote.affected_users} users` : "Unknown",
-    affectedUsers: remote.affected_users ? `${remote.affected_users}` : "0",
-    duration: computeDuration(remote.created_at, remote.resolved_at),
-    tags: remote.tags || [],
+    id: inc.incident_number || inc.id,
+    title: inc.title,
+    severity: mapSeverity(inc.severity),
+    service: inc.service,
+    status: mapStatus(inc.status),
+    assignee: inc.owner || "Unassigned",
+    createdAt: formatDate(inc.created_at),
+    updatedAt: formatDate(inc.updated_at),
+    description: inc.description,
+    impact: inc.affected_users ? `${inc.affected_users} users` : "Unknown",
+    affectedUsers: inc.affected_users ? `${inc.affected_users}` : "0",
+    duration: computeDuration(inc.created_at, inc.resolved_at),
+    tags: inc.tags || [],
     timeline: [],
     logs: [],
     analysis: null,

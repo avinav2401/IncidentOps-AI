@@ -22,7 +22,7 @@ def trigger_incident(
     db: Session = Depends(get_db),
     user: User = Depends(require_role("owner", "admin", "incident_commander")),
 ) -> dict[str, Any]:
-    incident = inject_payment_service_crash(db, user.name)
+    incident = inject_payment_service_crash(db, user.workspace_id, user.name)
 
     # Auto-trigger the AI pipeline (Step 3: AI starts automatically)
     background_tasks.add_task(run_pipeline, incident["id"])

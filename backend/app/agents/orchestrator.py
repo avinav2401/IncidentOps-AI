@@ -163,7 +163,7 @@ async def run_pipeline(incident_id: str) -> None:
             _update_agent_status(db, agent_name, "Running")
             _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
             start_time = time.monotonic()
-            res = await fetch_recent_commits(incident.service)
+            res = await fetch_recent_commits(incident.service, incident.workspace_id, db)
             dur = time.monotonic() - start_time
             _add_incident_log(db, incident_id, "Found recent commits:\n" + "\n".join(res), agent_name)
             _update_agent_status(db, agent_name, "Idle")

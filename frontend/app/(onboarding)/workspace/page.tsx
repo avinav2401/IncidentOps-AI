@@ -218,13 +218,41 @@ export default function WorkspaceWizard() {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <button className="flex items-center justify-center gap-3 rounded-xl border border-slate-700 bg-slate-800/50 p-4 transition hover:border-slate-500 hover:bg-slate-700/50">
-                  <Slack size={20} className="text-slate-300" />
-                  <span className="text-sm font-medium">Connect Slack</span>
+                <button 
+                  onClick={() => {
+                    const btn = document.getElementById("slack-btn");
+                    const icon = document.getElementById("slack-icon");
+                    const text = document.getElementById("slack-text");
+                    if (btn && icon && text) {
+                      btn.className = "flex items-center justify-center gap-3 rounded-xl border border-sky-500 bg-sky-500/10 p-4 transition";
+                      icon.className = "text-sky-400";
+                      text.innerText = "Slack Connected";
+                      text.className = "text-sm font-medium text-sky-400";
+                    }
+                  }}
+                  id="slack-btn"
+                  className="flex items-center justify-center gap-3 rounded-xl border border-slate-700 bg-slate-800/50 p-4 transition hover:border-slate-500 hover:bg-slate-700/50"
+                >
+                  <Slack id="slack-icon" size={20} className="text-slate-300" />
+                  <span id="slack-text" className="text-sm font-medium">Connect Slack</span>
                 </button>
-                <button className="flex items-center justify-center gap-3 rounded-xl border border-slate-700 bg-slate-800/50 p-4 transition hover:border-slate-500 hover:bg-slate-700/50">
-                  <Users size={20} className="text-slate-300" />
-                  <span className="text-sm font-medium">Invite Team</span>
+                <button 
+                  onClick={() => {
+                    const btn = document.getElementById("team-btn");
+                    const icon = document.getElementById("team-icon");
+                    const text = document.getElementById("team-text");
+                    if (btn && icon && text) {
+                      btn.className = "flex items-center justify-center gap-3 rounded-xl border border-sky-500 bg-sky-500/10 p-4 transition";
+                      icon.className = "text-sky-400";
+                      text.innerText = "Team Invited";
+                      text.className = "text-sm font-medium text-sky-400";
+                    }
+                  }}
+                  id="team-btn"
+                  className="flex items-center justify-center gap-3 rounded-xl border border-slate-700 bg-slate-800/50 p-4 transition hover:border-slate-500 hover:bg-slate-700/50"
+                >
+                  <Users id="team-icon" size={20} className="text-slate-300" />
+                  <span id="team-text" className="text-sm font-medium">Invite Team</span>
                 </button>
               </div>
 

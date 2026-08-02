@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import Base, SessionLocal, engine
-from app.routers import agents, analytics, audit, auth, chat, incidents, integrations, knowledge, reports, stream
+from app.routers import agents, analytics, audit, auth, chat, incidents, integrations, knowledge, reports, stream, users
 from app.seed import seed_database
 
 
@@ -93,6 +93,7 @@ def create_app() -> FastAPI:
         reports.router,
         stream.router,
         simulator.router,
+        users.router,
     ]
     for router in all_routers:
         application.include_router(router, prefix="/api/v1")
