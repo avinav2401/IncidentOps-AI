@@ -46,7 +46,7 @@ def list_incidents(
     db: Session = Depends(get_db),
     _user: User = Depends(get_current_user),
 ) -> IncidentListResponse:
-    rows, total = svc.list_incidents(db, status_filter, severity, service, q, limit, offset)
+    rows, total = svc.list_incidents(db, _user.workspace_id, status_filter, severity, service, q, limit, offset)
     incidents = [IncidentRead.model_validate(row) for row in rows]
     return IncidentListResponse(items=incidents, incidents=incidents, total=total, limit=limit, offset=offset)
 
@@ -57,7 +57,7 @@ def create_incident(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> IncidentRead:
-    return IncidentRead.model_validate(svc.create_incident(db, payload, user.name))
+    return IncidentRead.model_validate(svc.create_incident(db, user.workspace_id, payload, user.name))
 
 
 @router.post("/simulate", response_model=IncidentRead, status_code=status.HTTP_201_CREATED, summary="Simulate a chaos event")
@@ -87,7 +87,7 @@ def simulate_incident(
         tags=["simulated", "chaos"],
         source="Chaos Simulator",
     )
-    return IncidentRead.model_validate(svc.create_incident(db, payload, "Simulator"))
+    return IncidentRead.model_validate(svc.create_incident(db, user.workspace_id, payload, "Simulator"))
 
 
 @router.get("/incidents/{incident_id}", response_model=IncidentDetail, summary="Get incident detail")
@@ -96,7 +96,7 @@ def get_incident(
     db: Session = Depends(get_db),
     _user: User = Depends(get_current_user),
 ) -> IncidentDetail:
-    detail = svc.get_detail(db, incident_id)
+    detail = svc.get_detail(db, _user.workspace_id, incident_id)
     if not detail:
         raise _not_found(incident_id)
     return IncidentDetail.model_validate(detail)
@@ -109,7 +109,7 @@ def update_incident(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> IncidentRead:
-    incident = svc.update_incident(db, incident_id, payload, user.name)
+    incident = svc.update_incident(db, user.workspace_id, incident_id, payload, user.name)
     if not incident:
         raise _not_found(incident_id)
     return IncidentRead.model_validate(incident)
@@ -121,7 +121,7 @@ def delete_incident(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> Response:
-    if not svc.delete_incident(db, incident_id, user.name):
+    if not svc.delete_incident(db, user.workspace_id, incident_id, user.name):
         raise _not_found(incident_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
@@ -132,7 +132,7 @@ def get_incident_logs(
     db: Session = Depends(get_db),
     _user: User = Depends(get_current_user),
 ) -> list[IncidentLogRead]:
-    logs = svc.get_incident_logs(db, incident_id)
+    logs = svc.get_incident_logs(db, _user.workspace_id, incident_id)
     if logs is None:
         raise _not_found(incident_id)
     return [IncidentLogRead.model_validate(item) for item in logs]
@@ -146,7 +146,7 @@ def approve_incident(
     db: Session = Depends(get_db),
     _user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
-    result = svc.approve(db, incident_id, payload)
+    result = svc.approve(db, _user.workspace_id, incident_id, payload)
     if not result:
         raise _not_found(incident_id)
     incident, recommendation = result
@@ -175,7 +175,7 @@ def resolve_incident(
     db: Session = Depends(get_db),
     _user: User = Depends(get_current_user),
 ) -> IncidentRead:
-    incident = svc.resolve(db, incident_id, payload)
+    incident = svc.resolve(db, _user.workspace_id, incident_id, payload)
     if not incident:
         raise _not_found(incident_id)
 
@@ -204,7 +204,7 @@ def add_comment(
     db: Session = Depends(get_db),
     _user: User = Depends(get_current_user),
 ) -> IncidentLogRead:
-    log = svc.add_comment(db, incident_id, payload.content, payload.actor)
+    log = svc.add_comment(db, _user.workspace_id, incident_id, payload.content, payload.actor)
     if not log:
         raise _not_found(incident_id)
     return IncidentLogRead.model_validate(log)
@@ -217,7 +217,7 @@ async def trigger_ai_analysis(
     db: Session = Depends(get_db),
     _user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
-    incident = svc.get_detail(db, incident_id)
+    incident = svc.get_detail(db, _user.workspace_id, incident_id)
     if not incident:
         raise _not_found(incident_id)
 
@@ -231,7 +231,7 @@ def get_notifications(
     db: Session = Depends(get_db),
     _user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
-    result = svc.get_notifications(db, incident_id)
+    result = svc.get_notifications(db, _user.workspace_id, incident_id)
     if result is None:
         raise _not_found(incident_id)
     return result

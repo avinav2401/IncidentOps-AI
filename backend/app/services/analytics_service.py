@@ -15,9 +15,9 @@ def _utcnow() -> datetime:
     return datetime.now(UTC).replace(microsecond=0)
 
 
-def compute_analytics(db: Session) -> dict[str, Any]:
+def compute_analytics(db: Session, workspace_id: str) -> dict[str, Any]:
     """Generate the analytics payload from current database state."""
-    incidents = db.query(Incident).all()
+    incidents = db.query(Incident).filter(Incident.workspace_id == workspace_id).all()
 
     statuses = {state.value: 0 for state in IncidentState}
     severities = {f"P{n}": 0 for n in range(1, 5)}

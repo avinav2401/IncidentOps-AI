@@ -20,4 +20,4 @@ def analytics(
     db: Session = Depends(get_db),
     _user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
-    return compute_analytics(db)
+    return compute_analytics(db, _user.workspace_id)

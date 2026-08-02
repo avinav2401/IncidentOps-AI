@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     supabase_url: str = ""
 
     # ── CORS ───────────────────────────────────────────────────────────
-    cors_origins: str = "http://localhost:3000"
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001"
 
     # ── Persistence (demo JSON store — kept for backward compat) ──────
     incidentops_data_file: str = ""

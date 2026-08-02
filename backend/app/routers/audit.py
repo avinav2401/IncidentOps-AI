@@ -22,5 +22,5 @@ def audit_logs(
     db: Session = Depends(get_db),
     _user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
-    rows = svc.audit_logs(db, incident_id=incident_id, limit=limit)
+    rows = svc.audit_logs(db, _user.workspace_id, incident_id=incident_id, limit=limit)
     return {"items": rows, "total": len(rows)}

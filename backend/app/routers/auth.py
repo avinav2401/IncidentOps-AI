@@ -14,7 +14,7 @@ from app.models.user import User
 from app.schemas.auth import LoginRequest, LoginResponse, SignupRequest, UserRead
 from app.services.auth_service import create_access_token, get_password_hash, verify_password
 
-router = APIRouter(tags=["Authentication"])
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 @router.post("/signup", response_model=LoginResponse, summary="Register a new user")

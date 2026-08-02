@@ -27,4 +27,3 @@ ruff>=0.4,<1.0
 # AI and Agents
 openai>=1.14,<2.0
 autogen-agentchat>=0.4,<1.0
-chromadb>=0.4,<1.0
