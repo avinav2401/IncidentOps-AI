@@ -31,8 +31,8 @@ async def propose_recommendation(root_cause: dict) -> dict:
             "model_comparisons": [
                 {"model": "GPT-4o", "confidence": 96, "action": data.get("title", "Restart Payment Service")},
                 {"model": "Gemini 1.5 Pro", "confidence": 92, "action": data.get("title", "Restart Payment Service")},
-                {"model": "Claude 3.5 Sonnet", "confidence": 88, "action": "Rollback Deployment"}
-            ]
+                {"model": "Claude 3.5 Sonnet", "confidence": 88, "action": "Rollback Deployment"},
+            ],
         }
     except Exception:
         return {
@@ -40,5 +40,5 @@ async def propose_recommendation(root_cause: dict) -> dict:
             "rationale": response[:200],
             "risk_level": "High",
             "proposed_actions": ["Review logs manually."],
-            "model_comparisons": []
+            "model_comparisons": [],
         }

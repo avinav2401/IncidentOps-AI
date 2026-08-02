@@ -3,16 +3,18 @@
 from __future__ import annotations
 
 import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.middleware.auth import get_current_user
-from app.models.user import User
 from app.models.service import Service
+from app.models.user import User
 
 router = APIRouter(tags=["Services"], prefix="/services")
+
 
 class ServiceCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
@@ -22,6 +24,7 @@ class ServiceCreate(BaseModel):
     environment: str = "Production"
     critical_level: str = "High"
     description: str | None = None
+
 
 @router.post("", summary="Create a new service")
 def create_service(req: ServiceCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -44,6 +47,7 @@ def create_service(req: ServiceCreate, db: Session = Depends(get_db), current_us
     db.refresh(new_service)
 
     return new_service.to_dict()
+
 
 @router.get("", summary="List all services in workspace")
 def list_services(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

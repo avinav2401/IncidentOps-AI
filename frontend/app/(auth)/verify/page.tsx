@@ -13,7 +13,7 @@ export default function VerifyPage() {
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Check your email</h1>
           <p className="mt-4 text-sm text-slate-400">
-            We've sent a verification link to your email address. Please click the link to verify your account and continue.
+            We&apos;ve sent a verification link to your email address. Please click the link to verify your account and continue.
           </p>
         </div>
 

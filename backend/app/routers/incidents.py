@@ -8,6 +8,7 @@ from typing import Any
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
+from app.agents.knowledge_base import kb
 from app.agents.orchestrator import run_pipeline
 from app.agents.post_approval_pipeline import run_post_approval_pipeline
 from app.database import get_db
@@ -167,8 +168,6 @@ def approve_incident(
     }
 
 
-from app.agents.knowledge_base import kb
-
 @router.post("/incidents/{incident_id}/resolve", response_model=IncidentRead, summary="Resolve an incident")
 def resolve_incident(
     incident_id: str,
@@ -179,22 +178,22 @@ def resolve_incident(
     incident = svc.resolve(db, incident_id, payload)
     if not incident:
         raise _not_found(incident_id)
-        
+
     # Index into the knowledge base
     recs = getattr(incident, "ai_recommendations", [])
     rec = recs[0] if recs else {}
     if hasattr(rec, "__dict__"):
         rec = rec.__dict__
-    
+
     incident_dict = {
         "incident_number": incident.incident_number,
         "service": incident.service,
         "severity": incident.severity,
         "owner": incident.owner,
-        "description": incident.description
+        "description": incident.description,
     }
     kb.index_resolved_incident(incident_dict, rec)
-    
+
     return IncidentRead.model_validate(incident)
 
 

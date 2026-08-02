@@ -2,20 +2,17 @@
 
 from __future__ import annotations
 
-import base64
 import time
 import uuid
-from datetime import datetime, UTC
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.config import settings
 from app.database import get_db
 from app.middleware.auth import get_current_user
 from app.models.user import User
-from app.schemas.auth import LoginRequest, LoginResponse, UserRead, SignupRequest
-from app.services.auth_service import get_password_hash, verify_password, create_access_token
+from app.schemas.auth import LoginRequest, LoginResponse, SignupRequest, UserRead
+from app.services.auth_service import create_access_token, get_password_hash, verify_password
 
 router = APIRouter(tags=["Authentication"])
 
@@ -27,7 +24,7 @@ def signup(req: SignupRequest, db: Session = Depends(get_db)) -> LoginResponse:
 
     user_id = str(uuid.uuid4())
     avatar_initials = "".join([part[0].upper() for part in req.name.split() if part])[:2]
-    
+
     new_user = User(
         id=user_id,
         name=req.name,
@@ -39,7 +36,7 @@ def signup(req: SignupRequest, db: Session = Depends(get_db)) -> LoginResponse:
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    
+
     token = create_access_token({"sub": new_user.id, "email": new_user.email, "role": new_user.role})
 
     return LoginResponse(
@@ -62,7 +59,7 @@ def login(req: LoginRequest, db: Session = Depends(get_db)) -> LoginResponse:
 
     # Fallback for demo users that don't have hashed passwords, or check proper hash
     if req.password == "demo123" and user.hashed_password == "":
-        pass # Allow demo login for seeded users
+        pass  # Allow demo login for seeded users
     elif not verify_password(req.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 

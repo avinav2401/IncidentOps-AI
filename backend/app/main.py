@@ -77,7 +77,7 @@ def create_app() -> FastAPI:
 
     # Mount all routers — both versioned (/api/v1/...) and unversioned for
     # backward compatibility with the demo frontend.
-    from app.routers import simulator, workspaces, services
+    from app.routers import services, simulator, workspaces
 
     all_routers = [
         auth.router,

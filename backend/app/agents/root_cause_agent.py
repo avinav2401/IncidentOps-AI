@@ -3,7 +3,9 @@
 from app.agents.llm import call_llm, parse_json_response
 
 
-async def determine_root_cause(log_summary: str, commits: list[str], monitor_data: dict, metrics_data: dict, knowledge_context: list[dict] = None) -> dict:
+async def determine_root_cause(
+    log_summary: str, commits: list[str], monitor_data: dict, metrics_data: dict, knowledge_context: list[dict] = None
+) -> dict:
     """
     Uses an LLM to synthesize logs, commits, monitor status, and metrics into a root cause hypothesis.
     """
