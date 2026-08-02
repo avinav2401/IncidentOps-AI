@@ -17,6 +17,7 @@ import {
   LayoutDashboard,
   Layers,
   Menu,
+  Network,
   Search,
   Settings,
   ShieldAlert,
@@ -36,6 +37,7 @@ const mainNavigation: { label: string; href: string; icon: LucideIcon }[] = [
 const intelligenceNavigation: { label: string; href: string; icon: LucideIcon }[] = [
   { label: "Knowledge Base", href: "/knowledge", icon: BookOpen },
   { label: "Reports", href: "/reports", icon: FileText },
+  { label: "Architecture", href: "/architecture", icon: Network },
 ];
 
 function Navigation({ onNavigate }: { onNavigate?: () => void }) {

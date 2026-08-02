@@ -117,6 +117,7 @@ class AIRecommendationRead(BaseModel):
     proposed_actions: list[str] = Field(default_factory=list)
     evidence_chain: list[dict[str, Any]] = Field(default_factory=list)
     similar_incidents: list[str] = Field(default_factory=list)
+    model_comparisons: list[dict[str, Any]] = Field(default_factory=list)
     created_at: datetime
     approved_at: datetime | None = None
     approved_by: str | None = None

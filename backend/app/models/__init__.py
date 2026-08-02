@@ -8,9 +8,15 @@ from app.models.jira_sync import JiraSync
 from app.models.recommendation import AIRecommendation
 from app.models.slack_message import SlackMessage
 from app.models.user import User
+from app.models.workspace import Workspace
+from app.models.service import Service
+from app.models.integration import Integration
 
 __all__ = [
     "User",
+    "Workspace",
+    "Service",
+    "Integration",
     "Incident",
     "IncidentLog",
     "AuditLog",

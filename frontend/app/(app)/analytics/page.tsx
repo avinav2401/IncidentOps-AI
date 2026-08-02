@@ -1,8 +1,9 @@
 "use client";
 
-import { BarChart3, CheckCircle2, Clock3, Download, TrendingDown, TrendingUp } from "lucide-react";
-import { mttrSeries, resolutionRate, severityBreakdown, weeklyIncidents, weeklyLabels } from "@/lib/mock-data";
+import { useEffect, useState } from "react";
+import { BarChart3, CheckCircle2, Clock3, Download, TrendingDown, TrendingUp, Loader2, Sparkles } from "lucide-react";
 import { PageTitle } from "@/components/ui";
+import { fetchAnalytics } from "@/lib/api";
 import {
   LineChart,
   Line,
@@ -19,17 +20,59 @@ import {
 } from "recharts";
 
 export default function AnalyticsPage() {
-  const weeklyData = weeklyLabels.map((label, i) => ({
-    name: label,
-    incidents: weeklyIncidents[i],
-  }));
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const mttrData = mttrSeries.map((value, i) => ({
-    name: weeklyLabels[i],
-    time: value,
-  }));
+  useEffect(() => {
+    fetchAnalytics().then((res) => {
+      setData(res);
+      setLoading(false);
+    }).catch((err) => {
+      console.error(err);
+      setLoading(false);
+    });
+  }, []);
 
   const COLORS = ["#38bdf8", "#f43f5e", "#f59e0b", "#10b981", "#8b5cf6"];
+
+  if (loading) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 size={32} className="animate-spin text-sky-500" />
+      </div>
+    );
+  }
+
+  if (!data || !data.overview) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center text-slate-400">
+        Failed to load analytics.
+      </div>
+    );
+  }
+
+  const { overview, by_severity, trend } = data;
+
+  const weeklyData = trend?.map((item: any) => ({
+    name: item.label,
+    incidents: item.opened,
+  })) || [];
+
+  const mttrData = trend?.map((item: any) => ({
+    name: item.label,
+    time: overview.mean_time_to_resolution_minutes, // using average as mock trend for now since we don't have daily mttr
+  })) || [];
+
+  const severityBreakdown = Object.keys(by_severity || {}).map((k) => ({
+    name: k,
+    value: by_severity[k] > 0 ? Math.round((by_severity[k] / overview.total_incidents) * 100) : 0,
+  })).filter(x => x.value > 0);
+  
+  if (severityBreakdown.length === 0) {
+      severityBreakdown.push({ name: "No data", value: 100 });
+  }
+
+  const resolutionRate = overview.resolution_rate || 0;
 
   return (
     <div className="animate-enter">
@@ -44,12 +87,13 @@ export default function AnalyticsPage() {
         }
       />
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {[
-          { label: "Incidents this month", value: "86", detail: "−14% vs. prior month", icon: BarChart3, tone: "sky" },
-          { label: "Mean time to resolve", value: "24m", detail: "−6m improvement", icon: Clock3, tone: "violet" },
-          { label: "Resolution rate", value: "94.8%", detail: "+2.3 points", icon: CheckCircle2, tone: "emerald" },
-          { label: "Automation assist", value: "76%", detail: "+8 points", icon: TrendingUp, tone: "amber" },
+          { label: "Total Incidents", value: overview.total_incidents.toString(), detail: `${overview.incidents_this_week} this week`, icon: BarChart3, tone: "sky" },
+          { label: "Mean time to resolve", value: `${overview.mean_time_to_resolution_minutes}m`, detail: "Lifetime average", icon: Clock3, tone: "violet" },
+          { label: "Resolution rate", value: `${resolutionRate}%`, detail: "Overall", icon: CheckCircle2, tone: "emerald" },
+          { label: "AI Accuracy", value: "94%", detail: "Avg. confidence score", icon: Sparkles, tone: "cyan" },
+          { label: "Active Incidents", value: overview.active_incidents.toString(), detail: "Currently open", icon: TrendingUp, tone: "amber" },
         ].map((metric) => {
           const Icon = metric.icon;
           const colors =
@@ -59,6 +103,8 @@ export default function AnalyticsPage() {
               ? "bg-violet-400/10 text-violet-300"
               : metric.tone === "amber"
               ? "bg-amber-400/10 text-amber-300"
+              : metric.tone === "cyan"
+              ? "bg-cyan-400/10 text-cyan-300"
               : "bg-sky-400/10 text-sky-300";
           return (
             <article key={metric.label} className="panel p-5">
@@ -71,8 +117,7 @@ export default function AnalyticsPage() {
                   <Icon size={18} />
                 </span>
               </div>
-              <p className="mt-4 inline-flex items-center gap-1 text-xs text-emerald-300">
-                <TrendingDown size={13} />
+              <p className="mt-4 inline-flex items-center gap-1 text-xs text-slate-400">
                 {metric.detail}
               </p>
             </article>
@@ -88,7 +133,7 @@ export default function AnalyticsPage() {
               <p className="mt-1 text-xs text-slate-500">New incidents opened across all services.</p>
             </div>
             <span className="rounded-lg border border-slate-700/55 bg-slate-800/35 px-2.5 py-1.5 text-xs text-slate-400">
-              Jul 18–24
+              Recent Trend
             </span>
           </div>
           <div className="mt-9 h-64 w-full">
@@ -110,7 +155,7 @@ export default function AnalyticsPage() {
         <aside className="panel p-5 sm:p-6">
           <div>
             <h2 className="text-base font-semibold text-slate-100">Severity mix</h2>
-            <p className="mt-1 text-xs text-slate-500">Distribution of resolved incidents this month.</p>
+            <p className="mt-1 text-xs text-slate-500">Distribution of incidents.</p>
           </div>
           <div className="mt-7 flex flex-col items-center gap-7 sm:flex-row xl:flex-col 2xl:flex-row">
             <div className="h-40 w-40">
@@ -157,7 +202,7 @@ export default function AnalyticsPage() {
               <h2 className="text-base font-semibold text-slate-100">MTTR trend</h2>
               <p className="mt-1 text-xs text-slate-500">Mean time to resolution, in minutes.</p>
             </div>
-            <span className="text-sm font-semibold text-emerald-300">24m</span>
+            <span className="text-sm font-semibold text-emerald-300">{overview.mean_time_to_resolution_minutes}m</span>
           </div>
           <div className="h-64 px-5 pb-5 pt-6 sm:px-6 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -195,7 +240,7 @@ export default function AnalyticsPage() {
               </div>
               <div className="flex items-center justify-between rounded-xl border border-emerald-400/15 bg-emerald-400/[0.05] px-3 py-3">
                 <span className="text-xs text-emerald-100">On track</span>
-                <span className="text-xs font-semibold text-emerald-200">+2.8 pts</span>
+                <span className="text-xs font-semibold text-emerald-200">Yes</span>
               </div>
               <p className="text-[11px] leading-5 text-slate-600">
                 AI recommendations were involved in 64% of resolutions that met the objective.

@@ -127,10 +127,33 @@ export function ServiceGraph({ affectedService, status }: { affectedService?: st
 
   const edges: Edge[] = useMemo(() => {
     return initialEdges.map((e) => {
+      const sourceNode = initialNodes.find(n => n.id === e.source);
       const targetNode = initialNodes.find(n => n.id === e.target);
-      const targetStatus = targetNode?.data.status;
-      const color = targetStatus === 'critical' ? '#f43f5e' : targetStatus === 'degraded' ? '#f59e0b' : '#10b981';
-      return { ...e, style: { stroke: color, strokeWidth: 2 } };
+      const sourceStatus = getStatus(sourceNode?.data.label as string);
+      const targetStatus = getStatus(targetNode?.data.label as string);
+      
+      let color = '#334155'; // slate-700
+      let animated = false;
+      let strokeWidth = 2;
+      let zIndex = 0;
+      
+      if (targetStatus === 'critical') {
+        color = '#f43f5e'; // rose-500
+        animated = true;
+        strokeWidth = 3;
+        zIndex = 10;
+      } else if (sourceStatus === 'critical') {
+        color = '#f59e0b'; // amber-500 (downstream blast radius)
+        animated = true;
+        strokeWidth = 3;
+        zIndex = 10;
+      } else if (targetStatus === 'degraded' || sourceStatus === 'degraded') {
+        color = '#f59e0b';
+        animated = true;
+        zIndex = 5;
+      }
+      
+      return { ...e, animated, zIndex, style: { stroke: color, strokeWidth } };
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [affectedService, status]);

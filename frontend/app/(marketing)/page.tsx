@@ -57,7 +57,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-3">
             <Link href="/login" className="hidden text-sm font-medium text-slate-300 transition hover:text-white md:block">Sign in</Link>
-            <Link href="/dashboard" className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:bg-sky-400 hover:shadow-sky-400/30">Get Started</Link>
+            <Link href="/signup" className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:bg-sky-400 hover:shadow-sky-400/30">Get Started</Link>
           </div>
         </div>
       </nav>
@@ -78,7 +78,7 @@ export default function LandingPage() {
             Reduce MTTR by 80% using autonomous AI agents that investigate, diagnose, and resolve production incidents — with human oversight at every step.
           </p>
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <Link href="/dashboard" className="group inline-flex items-center gap-2 rounded-xl bg-sky-500 px-6 py-3.5 text-sm font-semibold text-white shadow-xl shadow-sky-500/25 transition hover:bg-sky-400 hover:shadow-sky-400/30">
+            <Link href="/signup" className="group inline-flex items-center gap-2 rounded-xl bg-sky-500 px-6 py-3.5 text-sm font-semibold text-white shadow-xl shadow-sky-500/25 transition hover:bg-sky-400 hover:shadow-sky-400/30">
               Start Free <ArrowRight size={16} className="transition group-hover:translate-x-1" />
             </Link>
             <button onClick={handleDemoLogin} disabled={isDemoLoading} className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/50 px-6 py-3.5 text-sm font-semibold text-slate-300 transition hover:border-slate-600 hover:bg-slate-800/60 hover:text-white disabled:opacity-75">
@@ -154,7 +154,7 @@ export default function LandingPage() {
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Ready to transform your incident response?</h2>
           <p className="mt-4 text-lg text-slate-400">Join teams reducing MTTR by 80% with AI-powered operations.</p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-6 py-3.5 text-sm font-semibold text-white shadow-xl shadow-sky-500/25 transition hover:bg-sky-400">
+            <Link href="/signup" className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-6 py-3.5 text-sm font-semibold text-white shadow-xl shadow-sky-500/25 transition hover:bg-sky-400">
               Get Started Free <ArrowRight size={16} />
             </Link>
           </div>

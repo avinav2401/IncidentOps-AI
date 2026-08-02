@@ -17,6 +17,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.agents.github_agent import fetch_recent_commits
+from app.agents.knowledge_agent import fetch_past_incidents
 from app.agents.log_analysis_agent import analyze_logs
 from app.agents.metrics_agent import fetch_metrics
 from app.agents.monitor_agent import check_service_status
@@ -169,9 +170,24 @@ async def run_pipeline(incident_id: str) -> None:
             publish(agent_end_event(incident_id, agent_name, summary=f"Found {len(res)} recent commits.", duration_seconds=dur))
             return res
 
+        async def run_knowledge():
+            agent_name = "Knowledge Agent"
+            publish(agent_start_event(incident_id, agent_name, description="Searching past incidents for context."))
+            _update_agent_status(db, agent_name, "Running")
+            _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
+            start_time = time.monotonic()
+            res = await fetch_past_incidents(incident.service)
+            dur = time.monotonic() - start_time
+            _add_incident_log(db, incident_id, f"Found {len(res)} similar past incidents.", agent_name)
+            _update_agent_status(db, agent_name, "Idle")
+            publish(agent_end_event(incident_id, agent_name, summary=f"Found {len(res)} past incidents.", duration_seconds=dur))
+            return res
+
         import asyncio
 
-        monitor_data, metrics_data, log_summary, commits = await asyncio.gather(run_monitor(), run_metrics(), run_logs(), run_github())
+        monitor_data, metrics_data, log_summary, commits, knowledge_data = await asyncio.gather(
+            run_monitor(), run_metrics(), run_logs(), run_github(), run_knowledge()
+        )
 
         # ── Step 2: Root Cause Agent ──────────────────────────────────
         step_start = time.monotonic()
@@ -187,7 +203,7 @@ async def run_pipeline(incident_id: str) -> None:
         _update_agent_status(db, agent_name, "Running")
         _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
 
-        root_cause = await determine_root_cause(log_summary, commits, monitor_data, metrics_data)
+        root_cause = await determine_root_cause(log_summary, commits, monitor_data, metrics_data, knowledge_data)
 
         step_duration = time.monotonic() - step_start
         _add_incident_log(

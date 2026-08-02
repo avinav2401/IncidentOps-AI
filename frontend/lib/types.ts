@@ -66,6 +66,7 @@ export interface Incident {
     };
     evidenceChain?: { step: string; type: "observation" | "deduction" | "conclusion" }[];
     similarIncidents?: string[];
+    modelComparisons?: { model: string; confidence: number; action: string }[];
   } | null;
   auditHistory: AuditEvent[];
 }

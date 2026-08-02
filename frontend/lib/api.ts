@@ -310,7 +310,8 @@ export async function fetchIncident(id: string): Promise<Incident | null> {
         estimatedRecovery: "5m"
       },
       evidenceChain: rec.evidence_chain || [],
-      similarIncidents: rec.similar_incidents || []
+      similarIncidents: rec.similar_incidents || [],
+      modelComparisons: rec.model_comparisons || []
     } : null,
     auditHistory: remote.audit_logs?.map((a: any) => ({
       time: formatDate(a.created_at),

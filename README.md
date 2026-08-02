@@ -38,8 +38,9 @@ IncidentOps AI turns the noisy first minutes of an outage into an auditable work
 - Ruff (linting/formatting)
 
 **AI & Agents:**
-- Supported LLMs: OpenAI (GPT-4o) and Groq (LLaMA 3.1)
-- Tool Calling & Agent logic implemented via direct LLM orchestration (with `pyautogen` available as an extension point).
+- Supported LLMs: OpenAI (GPT-4o) and Groq (LLaMA 3.1) / Gemini
+- Microsoft Agent Framework (Orchestrates Multi-Agent logic)
+- ChromaDB (Knowledge base indexing)
 
 **DevOps:**
 - Docker & Docker Compose

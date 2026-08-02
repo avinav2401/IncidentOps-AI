@@ -14,10 +14,11 @@ class Incident(Base):
     __tablename__ = "incidents"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    workspace_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     incident_number: Mapped[str] = mapped_column(String(20), unique=True, nullable=False, index=True)
     title: Mapped[str] = mapped_column(String(180), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    service: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    service_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     severity: Mapped[str] = mapped_column(String(4), nullable=False, default="P2", index=True)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="Open", index=True)
     owner: Mapped[str | None] = mapped_column(String(120), nullable=True)
@@ -56,10 +57,11 @@ class Incident(Base):
         """Convenience serializer for API responses."""
         return {
             "id": self.id,
+            "workspace_id": self.workspace_id,
             "incident_number": self.incident_number,
             "title": self.title,
             "description": self.description,
-            "service": self.service,
+            "service_id": self.service_id,
             "severity": self.severity,
             "status": self.status,
             "owner": self.owner,
