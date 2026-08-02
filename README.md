@@ -259,6 +259,27 @@ Before deploying beyond a demo environment:
 - Restrict `CORS_ORIGINS` to real HTTPS domains and put the services behind TLS, rate limiting, and an authenticated reverse proxy.
 - Add centralized logs, audit retention, backups, monitoring, and alerting appropriate to your organization.
 
-## License
+## Deployment Options
 
-This project is intended as a portfolio demonstration. Add a license appropriate to your distribution and usage requirements before publishing or reusing it.
+This project includes built-in support for deploying to modern cloud providers.
+
+### Option A: One-Click Deploy to Render (Recommended for simplicity)
+The repository includes a `render.yaml` Blueprint file. This allows you to deploy the entire stack (Database, Backend, and Frontend) to Render's free tier with a single click.
+
+1. Create a free account on [Render](https://render.com).
+2. Go to your Render Dashboard and click **New > Blueprint**.
+3. Connect your GitHub repository.
+4. Render will automatically detect the `render.yaml` file and provision your PostgreSQL database, FastAPI backend, and Next.js frontend services.
+5. In your Render Dashboard, select the `incidentops-backend` service, go to Environment, and add your `OPENAI_API_KEY` (or `GROQ_API_KEY`).
+
+*Note: Render's free tier spins down services after 15 minutes of inactivity, so expect a 30-50 second cold start delay when you first visit the site.*
+
+### Option B: The "No Sleep" Free Tier (Vercel + Koyeb + Neon)
+If you want to avoid Render's cold starts and database expiration limits, split the architecture across providers:
+
+1. **Frontend (Vercel):** Go to [Vercel](https://vercel.com) and import the repository. Set the **Root Directory** to `frontend`. It will automatically detect Next.js and build it.
+2. **Database (Neon):** Go to [Neon.tech](https://neon.tech) and create a free PostgreSQL database. Copy the connection string.
+3. **Backend (Koyeb/Railway):** Deploy the `backend/` directory as a Docker container to a free provider like Koyeb. Set the `DATABASE_URL` to your Neon connection string.
+4. **Link them:** Go back to Vercel and add your new Koyeb backend URL as the `NEXT_PUBLIC_API_URL` environment variable.
+
+
