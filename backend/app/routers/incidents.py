@@ -12,7 +12,7 @@ from app.agents.knowledge_base import kb
 from app.agents.orchestrator import run_pipeline
 from app.agents.post_approval_pipeline import run_post_approval_pipeline
 from app.database import get_db
-from app.middleware.auth import get_current_user, require_role
+from app.middleware.auth import require_role
 from app.models.user import User
 from app.schemas.incident import (
     ApprovalRequest,

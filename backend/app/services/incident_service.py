@@ -340,7 +340,7 @@ def audit_logs(db: Session, workspace_id: str, incident_id: str | None = None, l
         # As a simplified approach for now, we just join.
         incident_ids = [row[0] for row in db.query(Incident.id).filter(Incident.workspace_id == workspace_id).all()]
         q = q.filter(AuditLog.entity_id.in_(incident_ids))
-        
+
     rows = q.order_by(AuditLog.created_at.desc()).limit(limit).all()
     return [r.to_dict() for r in rows]
 

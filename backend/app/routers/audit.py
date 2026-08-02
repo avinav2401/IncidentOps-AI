@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.middleware.auth import get_current_user, require_role
+from app.middleware.auth import require_role
 from app.models.user import User
 from app.services import incident_service as svc
 

@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.middleware.auth import get_current_user, require_role
+from app.middleware.auth import require_role
 from app.models.service import Service
 from app.models.user import User
 

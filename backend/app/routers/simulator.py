@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.agents.orchestrator import run_pipeline
 from app.database import get_db
-from app.middleware.auth import get_current_user, require_role
+from app.middleware.auth import require_role
 from app.models.user import User
 from app.services.simulator import inject_payment_service_crash
 

@@ -15,7 +15,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
 from app.events import StreamEvent
-from app.middleware.auth import get_current_user, require_role
+from app.middleware.auth import get_current_user
 from app.models.user import User
 
 router = APIRouter(tags=["Stream"])

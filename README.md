@@ -12,9 +12,9 @@ IncidentOps AI turns the noisy first minutes of an outage into an auditable work
 - Presents incident impact, evidence, timeline, owner, severity, and current action in one command center.
 - Orchestrates an agent-style investigation flow: monitor signal → log context → root-cause hypothesis → recommendation → human approval → notification/ticket handoff.
 - **Real-time Pipeline Tracking:** Uses Server-Sent Events (SSE) to stream agent thoughts, steps, and execution timings directly to the frontend.
-- **Production-grade Security:** Secret scanning with Gitleaks in CI, strict constant-time HMAC-SHA256 signature verification for inbound webhooks (PagerDuty, Slack), and a formal `SECURITY.md` policy.
-- **Pluggable Output Handlers:** An extensible registry for posting incident resolutions and AI recommendations to external platforms like Slack.
-- Enforces role-aware workflows for **Admin**, **Incident Commander**, and **Responder** users with JWT-backed API access.
+- **Production-grade Security:** Secret scanning with Gitleaks in CI, strict constant-time HMAC-SHA256 signature verification for inbound webhooks (PagerDuty, Slack), IDOR protection via workspace isolation, XSS prevention, and a formal `SECURITY.md` policy.
+- Pluggable Output Handlers: An extensible registry for posting incident resolutions and AI recommendations to external platforms like Slack.
+- Enforces a comprehensive **9-Role Matrix** (Owner, Admin, Auditor, Incident Commander, Responder, SME, Observer, External Stakeholder, Automation) for highly granular, JWT-backed API access.
 - Captures operator decisions and lifecycle transitions in an immutable audit trail.
 - Surfaces operational analytics and agent health so teams can understand both incidents and the system investigating them.
 

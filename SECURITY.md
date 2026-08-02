@@ -62,6 +62,32 @@ When deploying IncidentOps AI:
 - All AI recommendations require human approval before execution
 - Monitor agent actions via the audit log API
 
+## Secure Coding Guidelines & Code Review Checklist
+
+When contributing to IncidentOps AI, all PRs must adhere to the following secure coding guidelines. 
+
+### 1. Authorization & Role-Based Access Control (RBAC)
+- **Role-Permission Matrix:** Verify that the 9-role matrix (Owner, Admin, Auditor, Incident Commander, Responder, SME, Observer, External Stakeholder, Automation) is strictly enforced.
+- **Endpoint Protection:** Ensure every new endpoint utilizes the `@require_role(...)` dependency to explicitly whitelist authorized roles. Do not rely solely on `@get_current_user`.
+
+### 2. IDOR (Insecure Direct Object Reference) Prevention
+- **Workspace Isolation:** Verify every endpoint and database query scopes data access to the user's `workspace_id`.
+- **Ownership Checks:** Even with a valid JWT and role, endpoints modifying resources (e.g., updating/deleting incidents) must verify the resource belongs to the user's current workspace.
+
+### 3. Input Validation & Injection Prevention
+- **Pydantic Schemas:** Use Pydantic schemas (`BaseModel`) for all incoming request payloads. Avoid accessing `request.json()` directly.
+- **ORM Parameterization:** Use SQLAlchemy ORM or parameterized queries exclusively to prevent SQL injection.
+- **String Constraints:** Apply `min_length`, `max_length`, and regex `pattern` validation on string inputs to prevent buffer overflows and unexpected input formatting.
+
+### 4. XSS (Cross-Site Scripting) Prevention
+- **Frontend Sanitization:** React escapes values by default. Avoid `dangerouslySetInnerHTML` entirely.
+- **Rich Text / Markdown:** If rendering markdown for incident descriptions or AI recommendations, use a strict sanitizer (e.g., `DOMPurify`) before rendering.
+
+### 5. File Upload Security (Attachments Module)
+- **Type Validation:** Validate MIME types explicitly. Do not rely solely on file extensions.
+- **Storage Isolation:** Store uploaded artifacts in a secure, isolated bucket or directory with restricted permissions.
+- **Execution Prevention:** Disable execution permissions on the upload directory and serve files with `Content-Disposition: attachment` to prevent inline execution of malicious scripts.
+
 ## Known Security Considerations
 
 ### AI Agent Execution

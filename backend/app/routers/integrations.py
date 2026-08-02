@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
-from app.middleware.auth import get_current_user, require_role
+from app.middleware.auth import require_role
 from app.models.audit_log import AuditLog
 from app.models.jira_sync import JiraSync
 from app.models.slack_message import SlackMessage
