@@ -44,7 +44,9 @@ def list_incidents(
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
-    _user: User = Depends(require_role("owner", "admin", "auditor", "incident_commander", "responder", "sme", "observer", "external_stakeholder")),
+    _user: User = Depends(
+        require_role("owner", "admin", "auditor", "incident_commander", "responder", "sme", "observer", "external_stakeholder")
+    ),
 ) -> IncidentListResponse:
     rows, total = svc.list_incidents(db, _user.workspace_id, status_filter, severity, service, q, limit, offset)
     incidents = [IncidentRead.model_validate(row) for row in rows]
@@ -94,7 +96,9 @@ def simulate_incident(
 def get_incident(
     incident_id: str,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_role("owner", "admin", "auditor", "incident_commander", "responder", "sme", "observer", "external_stakeholder")),
+    _user: User = Depends(
+        require_role("owner", "admin", "auditor", "incident_commander", "responder", "sme", "observer", "external_stakeholder")
+    ),
 ) -> IncidentDetail:
     detail = svc.get_detail(db, _user.workspace_id, incident_id)
     if not detail:
@@ -130,7 +134,9 @@ def delete_incident(
 def get_incident_logs(
     incident_id: str,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_role("owner", "admin", "auditor", "incident_commander", "responder", "sme", "observer", "external_stakeholder")),
+    _user: User = Depends(
+        require_role("owner", "admin", "auditor", "incident_commander", "responder", "sme", "observer", "external_stakeholder")
+    ),
 ) -> list[IncidentLogRead]:
     logs = svc.get_incident_logs(db, _user.workspace_id, incident_id)
     if logs is None:
@@ -229,7 +235,9 @@ async def trigger_ai_analysis(
 def get_notifications(
     incident_id: str,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_role("owner", "admin", "auditor", "incident_commander", "responder", "sme", "observer", "external_stakeholder")),
+    _user: User = Depends(
+        require_role("owner", "admin", "auditor", "incident_commander", "responder", "sme", "observer", "external_stakeholder")
+    ),
 ) -> dict[str, Any]:
     result = svc.get_notifications(db, _user.workspace_id, incident_id)
     if result is None:

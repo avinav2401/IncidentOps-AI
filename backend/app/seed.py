@@ -42,14 +42,32 @@ def seed_database(db: Session) -> None:
     def days(n: int) -> datetime:
         return now - timedelta(days=n)
 
-    workspace = Workspace(id="ws_demo", name="Demo Workspace", slug="demo-workspace", industry="Tech", company_size="50-100", owner_id="usr_maya")
+    workspace = Workspace(
+        id="ws_demo", name="Demo Workspace", slug="demo-workspace", industry="Tech", company_size="50-100", owner_id="usr_maya"
+    )
     db.add(workspace)
 
     # ── Users ──────────────────────────────────────────────────────────
     users = [
-        User(id="usr_maya", workspace_id="ws_demo", name="Maya Chen", email="maya.chen@incidentops.dev", role="incident_commander", avatar_initials="MC"),
-        User(id="usr_samir", workspace_id="ws_demo", name="Samir Patel", email="samir.patel@incidentops.dev", role="responder", avatar_initials="SP"),
-        User(id="usr_lena", workspace_id="ws_demo", name="Lena Ortiz", email="lena.ortiz@incidentops.dev", role="admin", avatar_initials="LO"),
+        User(
+            id="usr_maya",
+            workspace_id="ws_demo",
+            name="Maya Chen",
+            email="maya.chen@incidentops.dev",
+            role="incident_commander",
+            avatar_initials="MC",
+        ),
+        User(
+            id="usr_samir",
+            workspace_id="ws_demo",
+            name="Samir Patel",
+            email="samir.patel@incidentops.dev",
+            role="responder",
+            avatar_initials="SP",
+        ),
+        User(
+            id="usr_lena", workspace_id="ws_demo", name="Lena Ortiz", email="lena.ortiz@incidentops.dev", role="admin", avatar_initials="LO"
+        ),
     ]
     db.add_all(users)
 

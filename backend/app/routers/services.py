@@ -50,7 +50,12 @@ def create_service(req: ServiceCreate, db: Session = Depends(get_db), current_us
 
 
 @router.get("", summary="List all services in workspace")
-def list_services(db: Session = Depends(get_db), current_user: User = Depends(require_role("owner", "admin", "auditor", "incident_commander", "responder", "sme", "observer", "external_stakeholder"))):
+def list_services(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_role("owner", "admin", "auditor", "incident_commander", "responder", "sme", "observer", "external_stakeholder")
+    ),
+):
     if not current_user.workspace_id:
         return []
     services = db.query(Service).filter(Service.workspace_id == current_user.workspace_id).all()

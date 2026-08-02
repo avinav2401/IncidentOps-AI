@@ -100,12 +100,20 @@ def list_incidents(
 
 
 def get_incident(db: Session, workspace_id: str, incident_id: str) -> dict[str, Any] | None:
-    row = db.query(Incident).filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id)).first()
+    row = (
+        db.query(Incident)
+        .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
+        .first()
+    )
     return row.to_dict() if row else None
 
 
 def get_detail(db: Session, workspace_id: str, incident_id: str) -> dict[str, Any] | None:
-    incident = db.query(Incident).filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id)).first()
+    incident = (
+        db.query(Incident)
+        .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
+        .first()
+    )
     if not incident:
         return None
     real_id = incident.id
@@ -168,8 +176,14 @@ def create_incident(db: Session, workspace_id: str, request: IncidentCreate, act
 # ── Update ─────────────────────────────────────────────────────────────
 
 
-def update_incident(db: Session, workspace_id: str, incident_id: str, request: IncidentUpdate, actor: str = "Maya Chen") -> dict[str, Any] | None:
-    incident = db.query(Incident).filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id)).first()
+def update_incident(
+    db: Session, workspace_id: str, incident_id: str, request: IncidentUpdate, actor: str = "Maya Chen"
+) -> dict[str, Any] | None:
+    incident = (
+        db.query(Incident)
+        .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
+        .first()
+    )
     if not incident:
         return None
     real_id = incident.id
@@ -198,7 +212,11 @@ def update_incident(db: Session, workspace_id: str, incident_id: str, request: I
 
 
 def add_comment(db: Session, workspace_id: str, incident_id: str, comment_text: str, actor: str = "Maya Chen") -> dict[str, Any] | None:
-    incident = db.query(Incident).filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id)).first()
+    incident = (
+        db.query(Incident)
+        .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
+        .first()
+    )
     if not incident:
         return None
 
@@ -215,7 +233,11 @@ def add_comment(db: Session, workspace_id: str, incident_id: str, comment_text: 
 
 
 def approve(db: Session, workspace_id: str, incident_id: str, request: ApprovalRequest) -> tuple[dict, dict] | None:
-    incident = db.query(Incident).filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id)).first()
+    incident = (
+        db.query(Incident)
+        .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
+        .first()
+    )
     if not incident:
         return None
     real_id = incident.id
@@ -271,7 +293,11 @@ def approve(db: Session, workspace_id: str, incident_id: str, request: ApprovalR
 
 
 def resolve(db: Session, workspace_id: str, incident_id: str, request: ResolutionRequest) -> dict[str, Any] | None:
-    incident = db.query(Incident).filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id)).first()
+    incident = (
+        db.query(Incident)
+        .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
+        .first()
+    )
     if not incident:
         return None
     real_id = incident.id
@@ -303,7 +329,11 @@ def resolve(db: Session, workspace_id: str, incident_id: str, request: Resolutio
 
 
 def delete_incident(db: Session, workspace_id: str, incident_id: str, actor: str = "Maya Chen") -> bool:
-    incident = db.query(Incident).filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id)).first()
+    incident = (
+        db.query(Incident)
+        .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
+        .first()
+    )
     if not incident:
         return False
     _add_audit(db, "incident", incident.id, "incident.deleted", actor, f"Deleted {incident.incident_number}.")
@@ -316,7 +346,11 @@ def delete_incident(db: Session, workspace_id: str, incident_id: str, actor: str
 
 
 def get_incident_logs(db: Session, workspace_id: str, incident_id: str) -> list[dict[str, Any]] | None:
-    incident = db.query(Incident).filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id)).first()
+    incident = (
+        db.query(Incident)
+        .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
+        .first()
+    )
     if not incident:
         return None
     real_id = incident.id
@@ -330,7 +364,11 @@ def get_incident_logs(db: Session, workspace_id: str, incident_id: str) -> list[
 def audit_logs(db: Session, workspace_id: str, incident_id: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
     q = db.query(AuditLog)
     if incident_id:
-        incident = db.query(Incident).filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id)).first()
+        incident = (
+            db.query(Incident)
+            .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
+            .first()
+        )
         if not incident:
             return []
         real_id = incident.id
@@ -353,7 +391,11 @@ def get_notifications(db: Session, workspace_id: str, incident_id: str) -> dict[
     from app.models.jira_sync import JiraSync
     from app.models.slack_message import SlackMessage
 
-    incident = db.query(Incident).filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id)).first()
+    incident = (
+        db.query(Incident)
+        .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
+        .first()
+    )
     if not incident:
         return None
     real_id = incident.id
