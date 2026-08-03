@@ -22,8 +22,6 @@ class ReportAgent:
         action_taken = recommendation.title if recommendation else "Manual resolution"
         root_cause = incident.resolution_summary or "Unknown"
 
-
-
         # Get prevention suggestions from Knowledge Agent
         from app.agents.knowledge_agent import get_prevention_suggestions
 

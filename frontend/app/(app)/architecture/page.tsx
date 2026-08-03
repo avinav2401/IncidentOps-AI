@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { ReactFlow, Background, Controls, Node, Edge, Handle, Position, NodeProps, useNodesState, useEdgesState } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Server, Database, Globe, Monitor, Zap, Bot, ShieldCheck, Box, MessageSquare, Terminal } from "lucide-react";
+import { Server, Database, Globe, Zap, ShieldCheck, Box, Terminal } from "lucide-react";
 import { PageTitle } from "@/components/ui";
 import dagre from "dagre";
 
@@ -87,8 +87,8 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => 
 };
 
 export default function ArchitecturePage() {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
