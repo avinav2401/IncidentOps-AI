@@ -89,6 +89,8 @@ def result_event(
     success: bool = True,
     total_duration_seconds: float | None = None,
     recommendation_id: str | None = None,
+    classifications: list[str] | None = None,
+    cost_impact: dict[str, Any] | None = None,
 ) -> StreamEvent:
     """Final pipeline result."""
     data: dict[str, Any] = {
@@ -99,6 +101,10 @@ def result_event(
         data["total_duration_seconds"] = round(total_duration_seconds, 2)
     if recommendation_id:
         data["recommendation_id"] = recommendation_id
+    if classifications:
+        data["classifications"] = classifications
+    if cost_impact:
+        data["cost_impact"] = cost_impact
     return StreamEvent(type="result", data=data, incident_id=incident_id)
 
 

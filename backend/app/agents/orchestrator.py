@@ -37,6 +37,7 @@ from app.models.incident import Incident
 from app.models.incident_log import IncidentLog
 from app.models.recommendation import AIRecommendation
 from app.routers.stream import close_stream, publish
+from app.services.intelligence import enrich_incident
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,23 @@ def _structured_log(event: str, **fields: Any) -> None:
         logger.info(json.dumps(payload, default=str))
     except Exception:
         logger.info("%s %s", event, fields)
+
+
+# ── Scenario evidence cache ───────────────────────────────────────────
+# Stores scenario data injected by the simulator so the orchestrator can
+# pass realistic evidence to each agent during the pipeline run.
+
+_scenario_cache: dict[str, dict] = {}
+
+
+def store_scenario_data(incident_id: str, data: dict) -> None:
+    """Cache scenario evidence for an incident (called by the simulator)."""
+    _scenario_cache[incident_id] = data
+
+
+def _load_scenario_data(incident_id: str) -> dict | None:
+    """Load and consume cached scenario evidence for the pipeline."""
+    return _scenario_cache.pop(incident_id, None)
 
 
 # ── DB helpers ────────────────────────────────────────────────────────
@@ -113,6 +131,9 @@ async def run_pipeline(incident_id: str) -> None:
         incident.status = "Investigating"
         db.commit()
 
+        # ── Load scenario evidence (if injected by the simulator) ─────
+        scenario_data = _load_scenario_data(incident_id)
+
         # ── Step 1: Parallel Evidence Gathering ───────────────────────
         step_start = time.monotonic()
 
@@ -124,7 +145,7 @@ async def run_pipeline(incident_id: str) -> None:
             _update_agent_status(db, agent_name, "Running")
             _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
             start_time = time.monotonic()
-            res = await check_service_status(incident.service)
+            res = await check_service_status(incident.service, scenario_data)
             dur = time.monotonic() - start_time
             _add_incident_log(db, incident_id, f"Service Status: {res['status']}", agent_name)
             _update_agent_status(db, agent_name, "Idle")
@@ -137,7 +158,7 @@ async def run_pipeline(incident_id: str) -> None:
             _update_agent_status(db, agent_name, "Running")
             _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
             start_time = time.monotonic()
-            res = await fetch_metrics(incident.service)
+            res = await fetch_metrics(incident.service, scenario_data)
             dur = time.monotonic() - start_time
             _add_incident_log(db, incident_id, f"Metrics: CPU {res['cpu']}, Mem {res['memory']}, Latency {res['latency']}", agent_name)
             _update_agent_status(db, agent_name, "Idle")
@@ -150,7 +171,7 @@ async def run_pipeline(incident_id: str) -> None:
             _update_agent_status(db, agent_name, "Running")
             _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
             start_time = time.monotonic()
-            res = await analyze_logs(incident_id, incident.service)
+            res = await analyze_logs(incident_id, incident.service, scenario_data)
             dur = time.monotonic() - start_time
             _add_incident_log(db, incident_id, res, agent_name)
             _update_agent_status(db, agent_name, "Idle")
@@ -163,7 +184,14 @@ async def run_pipeline(incident_id: str) -> None:
             _update_agent_status(db, agent_name, "Running")
             _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
             start_time = time.monotonic()
-            res = await fetch_recent_commits(incident.service, incident.workspace_id, db)
+            # Use scenario commits if available, otherwise try real GitHub API
+            if scenario_data and scenario_data.get("recent_commits"):
+                import asyncio as _aio
+
+                await _aio.sleep(0.3)  # Simulate API latency
+                res = scenario_data["recent_commits"]
+            else:
+                res = await fetch_recent_commits(incident.service, incident.workspace_id, db)
             dur = time.monotonic() - start_time
             _add_incident_log(db, incident_id, "Found recent commits:\n" + "\n".join(res), agent_name)
             _update_agent_status(db, agent_name, "Idle")
@@ -176,7 +204,7 @@ async def run_pipeline(incident_id: str) -> None:
             _update_agent_status(db, agent_name, "Running")
             _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
             start_time = time.monotonic()
-            res = await fetch_past_incidents(incident.service)
+            res = await fetch_past_incidents(incident.service, scenario_data)
             dur = time.monotonic() - start_time
             _add_incident_log(db, incident_id, f"Found {len(res)} similar past incidents.", agent_name)
             _update_agent_status(db, agent_name, "Idle")
@@ -187,6 +215,40 @@ async def run_pipeline(incident_id: str) -> None:
 
         monitor_data, metrics_data, log_summary, commits, knowledge_data = await asyncio.gather(
             run_monitor(), run_metrics(), run_logs(), run_github(), run_knowledge()
+        )
+
+        # ── Step 1b: Intelligence Engine ──────────────────────────────
+        agent_name = "Intelligence Engine"
+        publish(agent_start_event(incident_id, agent_name, description="Classifying incident and calculating impact."))
+        _update_agent_status(db, agent_name, "Running")
+        step_start = time.monotonic()
+
+        # Extract error rate from metrics if available
+        error_rate_str = metrics_data.get("error_rate", "0%").replace("%", "")
+        try:
+            error_rate_val = float(error_rate_str)
+        except (ValueError, TypeError):
+            error_rate_val = 0.0
+
+        intelligence = enrich_incident(db, incident, logs=log_summary, error_rate=error_rate_val)
+
+        step_duration = time.monotonic() - step_start
+        classifications = intelligence["classifications"]
+        cost = intelligence["cost_impact"]
+        _add_incident_log(
+            db,
+            incident_id,
+            f"Classification: {', '.join(classifications)} | Severity: {intelligence['calculated_severity']} | Est. Cost: ${cost['total_estimated_cost']}",
+            agent_name,
+        )
+        _update_agent_status(db, agent_name, "Idle")
+        publish(
+            agent_end_event(
+                incident_id,
+                agent_name,
+                summary=f"Classified as {', '.join(classifications)}. Impact: ${cost['total_estimated_cost']} ({cost['impact_category']})",
+                duration_seconds=step_duration,
+            )
         )
 
         # ── Step 2: Root Cause Agent ──────────────────────────────────
@@ -311,6 +373,8 @@ async def run_pipeline(incident_id: str) -> None:
                 success=True,
                 total_duration_seconds=total_duration,
                 recommendation_id=rec_id,
+                classifications=intelligence["classifications"],
+                cost_impact=intelligence["cost_impact"],
             )
         )
 

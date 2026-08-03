@@ -241,8 +241,14 @@ export async function fetchIncidents(): Promise<Incident[]> {
   })) as Incident[];
 }
 
-export async function simulateIncident(): Promise<Incident | null> {
-  const remote = await request<any>("/simulator/trigger", {
+export async function fetchScenarios(): Promise<any[]> {
+  const remote = await request<any>("/simulator/scenarios");
+  return Array.isArray(remote) ? remote : [];
+}
+
+export async function simulateIncident(scenarioIndex?: number): Promise<Incident | null> {
+  const url = scenarioIndex !== undefined ? `/simulator/trigger?scenario_index=${scenarioIndex}` : "/simulator/trigger";
+  const remote = await request<any>(url, {
     method: "POST"
   });
   if (!remote) return null;

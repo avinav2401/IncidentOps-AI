@@ -31,6 +31,7 @@ const mainNavigation: { label: string; href: string; icon: LucideIcon }[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Incidents", href: "/incidents", icon: ShieldAlert },
   { label: "AI Investigation", href: "/agents", icon: Bot },
+  { label: "Training", href: "/training", icon: Command },
   { label: "Analytics", href: "/analytics", icon: BarChart3 },
 ];
 

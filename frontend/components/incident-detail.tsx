@@ -12,6 +12,7 @@ import { ServiceGraph } from "@/components/service-graph";
 import { IncidentReplay } from "@/components/incident-replay";
 import { DecisionTree } from "@/components/decision-tree";
 import { TimelineComments } from "@/components/timeline-comments";
+import { LiveTerminal } from "@/components/live-terminal";
 import { useAuth } from "@/lib/auth-context";
 
 const eventIcons = {
@@ -305,7 +306,7 @@ export function IncidentDetail({ incident, onRefetch }: { incident: Incident, on
             </section>
           </>
         ) : (
-          <section className="mt-8">
+          <section className="mt-8 space-y-6">
             <MultiAgentProgress 
               incidentId={incident.id}
               incidentStatus={incident.status} 
@@ -316,6 +317,7 @@ export function IncidentDetail({ incident, onRefetch }: { incident: Incident, on
                 }
               }} 
             />
+            <LiveTerminal incidentId={incident.id} />
           </section>
         )}
 

@@ -12,6 +12,10 @@ IncidentOps AI turns the noisy first minutes of an outage into an auditable work
 - Presents incident impact, evidence, timeline, owner, severity, and current action in one command center.
 - Orchestrates an agent-style investigation flow: monitor signal → log context → root-cause hypothesis → recommendation → human approval → notification/ticket handoff.
 - **Real-time Pipeline Tracking:** Uses Server-Sent Events (SSE) to stream agent thoughts, steps, and execution timings directly to the frontend.
+- **Live AI Terminal:** Embedded retro-terminal that streams internal AI reasoning logs in real-time during an incident investigation.
+- **Dynamic Dependency Graph:** Live interactive microservice topology graph built with React Flow and `dagre` that displays the current health status of all connected services.
+- **AI Intelligence Engine:** Auto-classifies incidents, dynamically calculates P1-P4 severity via multi-factor impact scoring, and estimates revenue/engineering cost impact in real time.
+- **AI Memory & Prevention:** Enhances postmortem reports by automatically querying past resolutions and generating structural prevention strategies based on root causes.
 - **Production-grade Security:** Secret scanning with Gitleaks in CI, strict constant-time HMAC-SHA256 signature verification for inbound webhooks (PagerDuty, Slack), IDOR protection via workspace isolation, XSS prevention, and a formal `SECURITY.md` policy.
 - Pluggable Output Handlers: An extensible registry for posting incident resolutions and AI recommendations to external platforms like Slack.
 - **Live GitHub Integration:** Dynamically fetches and analyzes recent commits from linked GitHub repositories via the GitHub REST API to help identify the root cause of an outage.
@@ -55,13 +59,14 @@ IncidentOps AI turns the noisy first minutes of an outage into an auditable work
 flowchart LR
     A["Monitor detects a signal"] --> B["Open incident"]
     B --> C["Collect logs & context"]
-    C --> D["Generate root-cause hypothesis"]
+    C -->|Intelligence Engine| I["Auto-classify, calculate severity, estimate cost"]
+    I --> D["Generate root-cause hypothesis"]
     D --> E["Recommend remediation"]
     E --> F{"Human approval"}
     F -->|"Approve"| G["Notify Slack / create Jira ticket"]
     F -->|"Request changes"| C
     G --> H["Resolve and close"]
-    H --> I["Immutable audit trail & analytics"]
+    H --> J["Immutable audit trail & analytics"]
 ```
 
 ## Architecture
@@ -177,7 +182,8 @@ Once you have the app running locally via Docker or local development, follow th
 | `GET`, `POST` | `/users` | List users in the workspace or invite new users (`/users/invite`). |
 | `GET`, `POST` | `/incidents` | List incidents or create a new one. |
 | `GET` | `/incidents/{id}` | Read an incident, its evidence, and audit context. |
-| `POST` | `/simulator/trigger` | Trigger a chaos incident and auto-start the AI orchestrator pipeline. |
+| `GET` | `/simulator/scenarios` | List all 10 available chaos scenarios. |
+| `POST` | `/simulator/trigger` | Inject a random (or specific) chaos incident and auto-start the AI pipeline. |
 | `GET` | `/incidents/{id}/stream` | Stream real-time Server-Sent Events (SSE) from the AI pipeline. |
 | `POST` | `/incidents/{id}/approve` | Record a human approval for a recommendation. |
 | `POST` | `/incidents/{id}/resolve` | Resolve an incident and append the relevant audit event. |

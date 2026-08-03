@@ -23,6 +23,7 @@ class Service(Base):
     critical_level: Mapped[str] = mapped_column(String(20), nullable=False, default="High")
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="healthy", index=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    dependencies: Mapped[str] = mapped_column(Text, nullable=False, default="[]")  # JSON string of service names
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -31,6 +32,13 @@ class Service(Base):
     )
 
     def to_dict(self) -> dict:
+        import json
+
+        try:
+            deps = json.loads(self.dependencies) if self.dependencies else []
+        except Exception:
+            deps = []
+
         return {
             "id": self.id,
             "workspace_id": self.workspace_id,
@@ -42,6 +50,7 @@ class Service(Base):
             "critical_level": self.critical_level,
             "status": self.status,
             "description": self.description,
+            "dependencies": deps,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 

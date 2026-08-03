@@ -60,3 +60,32 @@ def list_services(
         return []
     services = db.query(Service).filter(Service.workspace_id == current_user.workspace_id).all()
     return [s.to_dict() for s in services]
+
+
+@router.get("/graph", summary="Get service dependency graph")
+def get_service_graph(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_role("owner", "admin", "auditor", "incident_commander", "responder", "sme", "observer", "external_stakeholder")
+    ),
+):
+    if not current_user.workspace_id:
+        return {"nodes": [], "edges": []}
+
+    services = db.query(Service).filter(Service.workspace_id == current_user.workspace_id).all()
+
+    nodes = []
+    edges = []
+
+    for s in services:
+        nodes.append(
+            {"id": s.name, "data": {"label": s.name, "status": s.status, "critical_level": s.critical_level, "environment": s.environment}}
+        )
+
+        # Build edges based on dependencies
+        s_dict = s.to_dict()
+        deps = s_dict.get("dependencies", [])
+        for dep in deps:
+            edges.append({"id": f"{s.name}->{dep}", "source": s.name, "target": dep, "animated": s.status != "healthy"})
+
+    return {"nodes": nodes, "edges": edges}

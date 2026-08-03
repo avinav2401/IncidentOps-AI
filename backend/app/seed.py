@@ -17,6 +17,7 @@ from app.models.incident import Incident
 from app.models.incident_log import IncidentLog
 from app.models.jira_sync import JiraSync
 from app.models.recommendation import AIRecommendation
+from app.models.service import Service
 from app.models.slack_message import SlackMessage
 from app.models.user import User
 from app.models.workspace import Workspace
@@ -70,6 +71,109 @@ def seed_database(db: Session) -> None:
         ),
     ]
     db.add_all(users)
+
+    # ── Services ───────────────────────────────────────────────────────
+    import json
+
+    services = [
+        Service(
+            id="srv_frontend",
+            workspace_id="ws_demo",
+            name="Frontend Web",
+            owner_team="Frontend Team",
+            repository="frontend-web",
+            language="TypeScript",
+            environment="Production",
+            critical_level="High",
+            status="healthy",
+            dependencies=json.dumps(["API Gateway"]),
+        ),
+        Service(
+            id="srv_gateway",
+            workspace_id="ws_demo",
+            name="API Gateway",
+            owner_team="Platform Team",
+            repository="api-gateway",
+            language="Go",
+            environment="Production",
+            critical_level="Critical",
+            status="healthy",
+            dependencies=json.dumps(["Payment Service", "Catalog API", "Auth Service"]),
+        ),
+        Service(
+            id="srv_payment",
+            workspace_id="ws_demo",
+            name="Payment Service",
+            owner_team="Backend Team",
+            repository="payment-service",
+            language="Java",
+            environment="Production",
+            critical_level="Critical",
+            status="healthy",
+            dependencies=json.dumps(["Database", "Redis"]),
+        ),
+        Service(
+            id="srv_catalog",
+            workspace_id="ws_demo",
+            name="Catalog API",
+            owner_team="Backend Team",
+            repository="catalog-api",
+            language="Python",
+            environment="Production",
+            critical_level="High",
+            status="healthy",
+            dependencies=json.dumps(["Database", "Elasticsearch"]),
+        ),
+        Service(
+            id="srv_auth",
+            workspace_id="ws_demo",
+            name="Auth Service",
+            owner_team="Security Team",
+            repository="auth-service",
+            language="Go",
+            environment="Production",
+            critical_level="Critical",
+            status="healthy",
+            dependencies=json.dumps(["Database", "Redis"]),
+        ),
+        Service(
+            id="srv_db",
+            workspace_id="ws_demo",
+            name="Database",
+            owner_team="Data Team",
+            repository="postgres-cluster",
+            language="SQL",
+            environment="Production",
+            critical_level="Critical",
+            status="healthy",
+            dependencies=json.dumps([]),
+        ),
+        Service(
+            id="srv_redis",
+            workspace_id="ws_demo",
+            name="Redis",
+            owner_team="Platform Team",
+            repository="redis-cluster",
+            language="C",
+            environment="Production",
+            critical_level="High",
+            status="healthy",
+            dependencies=json.dumps([]),
+        ),
+        Service(
+            id="srv_elastic",
+            workspace_id="ws_demo",
+            name="Elasticsearch",
+            owner_team="Data Team",
+            repository="elastic-cluster",
+            language="Java",
+            environment="Production",
+            critical_level="Medium",
+            status="healthy",
+            dependencies=json.dumps([]),
+        ),
+    ]
+    db.add_all(services)
 
     # ── Incidents ──────────────────────────────────────────────────────
     incidents_data = [

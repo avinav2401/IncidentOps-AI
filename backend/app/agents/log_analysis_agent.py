@@ -1,18 +1,26 @@
-"""Simulated Log Analysis Agent."""
+"""Simulated Log Analysis Agent.
+
+Uses scenario-specific log data when available. Sends the logs to the
+LLM for analysis regardless of whether they're from a scenario or
+the legacy mock.
+"""
 
 import asyncio
 
 from app.agents.llm import call_llm
 
 
-async def analyze_logs(incident_id: str, service: str) -> str:
+async def analyze_logs(incident_id: str, service: str, scenario_data: dict | None = None) -> str:
+    """Analyze recent application logs for the given service.
+
+    If ``scenario_data`` is provided, use its realistic log content.
+    Otherwise, fall back to hardcoded mock logs.
     """
-    Simulates fetching logs and uses a real LLM to analyze them.
-    In a complete setup, this agent would use an Elasticsearch tool.
-    """
-    # Mock log fetch for the demo
     await asyncio.sleep(0.5)
-    if service == "Payment Service":
+
+    if scenario_data and "logs" in scenario_data:
+        mock_logs = scenario_data["logs"]
+    elif service == "Payment Service":
         mock_logs = "OutOfMemoryError\nJava Heap Space\nKilled by Linux OOM Killer\n"
     else:
         mock_logs = (

@@ -19,6 +19,7 @@ export function MultiAgentProgress({ incidentId, incidentStatus, onComplete }: {
     { id: "metrics", name: "Metrics Agent", icon: Database, progress: 0, status: "idle", detail: "Waiting to start..." },
     { id: "github", name: "GitHub Commit Agent", icon: GitBranch, progress: 0, status: "idle", detail: "Waiting to start..." },
     { id: "knowledge", name: "Knowledge Agent", icon: BookOpen, progress: 0, status: "idle", detail: "Waiting to start..." },
+    { id: "intelligence", name: "Intelligence Engine", icon: BrainCircuit, progress: 0, status: "idle", detail: "Waiting to start..." },
     { id: "rootcause", name: "Root Cause Agent", icon: BrainCircuit, progress: 0, status: "idle", detail: "Waiting to start..." },
     { id: "recommendation", name: "Recommendation Agent", icon: BrainCircuit, progress: 0, status: "idle", detail: "Waiting to start..." },
   ]);
