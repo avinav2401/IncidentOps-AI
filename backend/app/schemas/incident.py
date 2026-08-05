@@ -117,7 +117,6 @@ class AIRecommendationRead(BaseModel):
     proposed_actions: list[str] = Field(default_factory=list)
     evidence_chain: list[dict[str, Any]] = Field(default_factory=list)
     similar_incidents: list[str] = Field(default_factory=list)
-    model_comparisons: list[dict[str, Any]] = Field(default_factory=list)
     created_at: datetime
     approved_at: datetime | None = None
     approved_by: str | None = None
@@ -149,7 +148,7 @@ class ApprovalRequest(BaseModel):
     recommendation_id: str | None = None
     decision: str = Field(default="approve", pattern="^(approve|reject)$")
     note: str | None = Field(default=None, max_length=1_000)
-    actor: str = Field(default="Maya Chen", max_length=120)
+    actor: str = Field(default="", max_length=120)
 
 
 class ResolutionRequest(BaseModel):
@@ -158,9 +157,9 @@ class ResolutionRequest(BaseModel):
         min_length=8,
         max_length=4_000,
     )
-    actor: str = Field(default="Maya Chen", max_length=120)
+    actor: str = Field(default="", max_length=120)
 
 
 class CommentRequest(BaseModel):
     content: str = Field(min_length=1, max_length=4_000)
-    actor: str = Field(default="Maya Chen", max_length=120)
+    actor: str = Field(default="", max_length=120)

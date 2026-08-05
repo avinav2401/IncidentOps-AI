@@ -64,7 +64,7 @@ def _format_markdown(
     if not success:
         lines.append(f"**Error:** {error or 'Unknown error'}")
         lines.append("")
-        if duration_seconds:
+        if duration_seconds is not None:
             lines.append(f"*Duration: {duration_seconds:.1f}s*")
         if run_id:
             lines.append("")

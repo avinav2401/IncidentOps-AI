@@ -29,10 +29,15 @@ class ReportAgent:
 
         # Calculate duration if possible
         duration = "Unknown"
-        if incident.created_at and incident.updated_at:
-            delta = incident.updated_at - incident.created_at
+        if incident.created_at:
+            end_time = incident.resolved_at
+            if not end_time:
+                from datetime import UTC, datetime
+                end_time = datetime.now(UTC)
+            
+            delta = end_time - incident.created_at
             minutes = delta.total_seconds() / 60
-            duration = f"{int(minutes)} minutes"
+            duration = f"{int(minutes)} minutes" if incident.resolved_at else f"{int(minutes)} minutes (Ongoing)"
 
         return {
             "incident_id": incident.id,

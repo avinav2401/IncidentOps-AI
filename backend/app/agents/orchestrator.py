@@ -58,12 +58,15 @@ def _structured_log(event: str, **fields: Any) -> None:
 # Stores scenario data injected by the simulator so the orchestrator can
 # pass realistic evidence to each agent during the pipeline run.
 
-_scenario_cache: dict[str, dict] = {}
+import collections
+_scenario_cache: collections.OrderedDict[str, dict] = collections.OrderedDict()
 
 
 def store_scenario_data(incident_id: str, data: dict) -> None:
     """Cache scenario evidence for an incident (called by the simulator)."""
     _scenario_cache[incident_id] = data
+    if len(_scenario_cache) > 100:
+        _scenario_cache.popitem(last=False)
 
 
 def _load_scenario_data(incident_id: str) -> dict | None:
@@ -140,76 +143,81 @@ async def run_pipeline(incident_id: str) -> None:
         publish(thought_event(incident_id, "Gathering evidence from Monitor, Logs, Metrics, and GitHub..."))
 
         async def run_monitor():
-            agent_name = "Monitor Agent"
-            publish(agent_start_event(incident_id, agent_name, description="Checking service health."))
-            _update_agent_status(db, agent_name, "Running")
-            _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
-            start_time = time.monotonic()
-            res = await check_service_status(incident.service, scenario_data)
-            dur = time.monotonic() - start_time
-            _add_incident_log(db, incident_id, f"Service Status: {res['status']}", agent_name)
-            _update_agent_status(db, agent_name, "Idle")
-            publish(agent_end_event(incident_id, agent_name, summary=f"Status: {res['status']}", duration_seconds=dur))
-            return res
+            with SessionLocal() as task_db:
+                agent_name = "Monitor Agent"
+                publish(agent_start_event(incident_id, agent_name, description="Checking service health."))
+                _update_agent_status(task_db, agent_name, "Running")
+                _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
+                start_time = time.monotonic()
+                res = await check_service_status(incident.service, scenario_data)
+                dur = time.monotonic() - start_time
+                _add_incident_log(task_db, incident_id, f"Service Status: {res['status']}", agent_name)
+                _update_agent_status(task_db, agent_name, "Idle")
+                publish(agent_end_event(incident_id, agent_name, summary=f"Status: {res['status']}", duration_seconds=dur))
+                return res
 
         async def run_metrics():
-            agent_name = "Metrics Agent"
-            publish(agent_start_event(incident_id, agent_name, description="Fetching APM metrics."))
-            _update_agent_status(db, agent_name, "Running")
-            _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
-            start_time = time.monotonic()
-            res = await fetch_metrics(incident.service, scenario_data)
-            dur = time.monotonic() - start_time
-            _add_incident_log(db, incident_id, f"Metrics: CPU {res['cpu']}, Mem {res['memory']}, Latency {res['latency']}", agent_name)
-            _update_agent_status(db, agent_name, "Idle")
-            publish(agent_end_event(incident_id, agent_name, summary=f"CPU: {res['cpu']}, Latency: {res['latency']}", duration_seconds=dur))
-            return res
+            with SessionLocal() as task_db:
+                agent_name = "Metrics Agent"
+                publish(agent_start_event(incident_id, agent_name, description="Fetching APM metrics."))
+                _update_agent_status(task_db, agent_name, "Running")
+                _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
+                start_time = time.monotonic()
+                res = await fetch_metrics(incident.service, scenario_data)
+                dur = time.monotonic() - start_time
+                _add_incident_log(task_db, incident_id, f"Metrics: CPU {res['cpu']}, Mem {res['memory']}, Latency {res['latency']}", agent_name)
+                _update_agent_status(task_db, agent_name, "Idle")
+                publish(agent_end_event(incident_id, agent_name, summary=f"CPU: {res['cpu']}, Latency: {res['latency']}", duration_seconds=dur))
+                return res
 
         async def run_logs():
-            agent_name = "Log Analysis Agent"
-            publish(agent_start_event(incident_id, agent_name, description="Scanning recent logs for anomalies."))
-            _update_agent_status(db, agent_name, "Running")
-            _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
-            start_time = time.monotonic()
-            res = await analyze_logs(incident_id, incident.service, scenario_data)
-            dur = time.monotonic() - start_time
-            _add_incident_log(db, incident_id, res, agent_name)
-            _update_agent_status(db, agent_name, "Idle")
-            publish(agent_end_event(incident_id, agent_name, summary=res[:200], duration_seconds=dur))
-            return res
+            with SessionLocal() as task_db:
+                agent_name = "Log Analysis Agent"
+                publish(agent_start_event(incident_id, agent_name, description="Scanning recent logs for anomalies."))
+                _update_agent_status(task_db, agent_name, "Running")
+                _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
+                start_time = time.monotonic()
+                res = await analyze_logs(incident_id, incident.service, scenario_data)
+                dur = time.monotonic() - start_time
+                _add_incident_log(task_db, incident_id, res, agent_name)
+                _update_agent_status(task_db, agent_name, "Idle")
+                publish(agent_end_event(incident_id, agent_name, summary=res[:200], duration_seconds=dur))
+                return res
 
         async def run_github():
-            agent_name = "GitHub Commit Agent"
-            publish(agent_start_event(incident_id, agent_name, description="Fetching recent commits."))
-            _update_agent_status(db, agent_name, "Running")
-            _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
-            start_time = time.monotonic()
-            # Use scenario commits if available, otherwise try real GitHub API
-            if scenario_data and scenario_data.get("recent_commits"):
-                import asyncio as _aio
+            with SessionLocal() as task_db:
+                agent_name = "GitHub Commit Agent"
+                publish(agent_start_event(incident_id, agent_name, description="Fetching recent commits."))
+                _update_agent_status(task_db, agent_name, "Running")
+                _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
+                start_time = time.monotonic()
+                # Use scenario commits if available, otherwise try real GitHub API
+                if scenario_data and scenario_data.get("recent_commits"):
+                    import asyncio as _aio
 
-                await _aio.sleep(0.3)  # Simulate API latency
-                res = scenario_data["recent_commits"]
-            else:
-                res = await fetch_recent_commits(incident.service, incident.workspace_id, db)
-            dur = time.monotonic() - start_time
-            _add_incident_log(db, incident_id, "Found recent commits:\n" + "\n".join(res), agent_name)
-            _update_agent_status(db, agent_name, "Idle")
-            publish(agent_end_event(incident_id, agent_name, summary=f"Found {len(res)} recent commits.", duration_seconds=dur))
-            return res
+                    await _aio.sleep(0.3)  # Simulate API latency
+                    res = scenario_data["recent_commits"]
+                else:
+                    res = await fetch_recent_commits(incident.service, incident.workspace_id, task_db)
+                dur = time.monotonic() - start_time
+                _add_incident_log(task_db, incident_id, "Found recent commits:\\n" + "\\n".join(res), agent_name)
+                _update_agent_status(task_db, agent_name, "Idle")
+                publish(agent_end_event(incident_id, agent_name, summary=f"Found {len(res)} recent commits.", duration_seconds=dur))
+                return res
 
         async def run_knowledge():
-            agent_name = "Knowledge Agent"
-            publish(agent_start_event(incident_id, agent_name, description="Searching past incidents for context."))
-            _update_agent_status(db, agent_name, "Running")
-            _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
-            start_time = time.monotonic()
-            res = await fetch_past_incidents(incident.service, scenario_data)
-            dur = time.monotonic() - start_time
-            _add_incident_log(db, incident_id, f"Found {len(res)} similar past incidents.", agent_name)
-            _update_agent_status(db, agent_name, "Idle")
-            publish(agent_end_event(incident_id, agent_name, summary=f"Found {len(res)} past incidents.", duration_seconds=dur))
-            return res
+            with SessionLocal() as task_db:
+                agent_name = "Knowledge Agent"
+                publish(agent_start_event(incident_id, agent_name, description="Searching past incidents for context."))
+                _update_agent_status(task_db, agent_name, "Running")
+                _structured_log("agent_step_started", agent=agent_name, incident_id=incident_id)
+                start_time = time.monotonic()
+                res = await fetch_past_incidents(incident.service, scenario_data)
+                dur = time.monotonic() - start_time
+                _add_incident_log(task_db, incident_id, f"Found {len(res)} similar past incidents.", agent_name)
+                _update_agent_status(task_db, agent_name, "Idle")
+                publish(agent_end_event(incident_id, agent_name, summary=f"Found {len(res)} past incidents.", duration_seconds=dur))
+                return res
 
         import asyncio
 

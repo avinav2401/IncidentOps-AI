@@ -6,23 +6,22 @@ import re
 
 from openai import AsyncOpenAI
 
-from app.config import Settings
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 
-def get_llm_client(settings: Settings | None = None) -> AsyncOpenAI:
-    if settings is None:
-        settings = Settings()
+def get_llm_client(custom_settings=None) -> AsyncOpenAI:
+    s = custom_settings or settings
 
-    if settings.llm_provider.lower() == "groq":
+    if s.llm_provider.lower() == "groq":
         return AsyncOpenAI(
-            api_key=settings.groq_api_key,
+            api_key=s.groq_api_key,
             base_url="https://api.groq.com/openai/v1",
         )
     else:
         return AsyncOpenAI(
-            api_key=settings.openai_api_key,
+            api_key=s.openai_api_key,
         )
 
 
@@ -47,7 +46,6 @@ async def call_llm(
     model: str = "gpt-4o",
 ) -> str:
     """Helper to make a simple LLM call."""
-    settings = Settings()
 
     # Map models for Groq if selected
     if settings.llm_provider.lower() == "groq":

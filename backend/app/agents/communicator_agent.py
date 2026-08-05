@@ -52,11 +52,12 @@ async def create_jira_ticket(
     service: str,
 ) -> dict:
     """Create a Jira ticket record for the post-incident bug."""
-    count = db.query(JiraSync).count()
+    import random
+    issue_id = random.randint(1000, 9999)
     sync = JiraSync(
         id=f"jira_sync_{_uid()}",
         incident_id=incident_id,
-        issue_key=f"INC-{180 + count + 1}",
+        issue_key=f"INC-{issue_id}",
         status="synced",
         synced_at=_utcnow(),
         project_key="INC",

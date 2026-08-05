@@ -25,6 +25,8 @@ router = APIRouter(tags=["Stream"])
 # In production you'd back this with Redis pub/sub, but for a single-
 # process deployment this is perfectly adequate.
 
+MAX_SUBSCRIBERS = 10
+
 _subscribers: dict[str, list[asyncio.Queue[StreamEvent | None]]] = defaultdict(list)
 
 
@@ -47,14 +49,15 @@ async def _event_generator(
     """Yield SSE-formatted events until the stream is closed."""
     try:
         while True:
-            event = await asyncio.wait_for(queue.get(), timeout=120.0)
-            if event is None:
-                # Stream finished
-                yield 'data: {"type": "done"}\n\n'
-                return
-            yield event.to_sse()
-    except TimeoutError:
-        yield 'data: {"type": "keepalive"}\n\n'
+            try:
+                event = await asyncio.wait_for(queue.get(), timeout=120.0)
+                if event is None:
+                    # Stream finished
+                    yield 'data: {"type": "done"}\n\n'
+                    return
+                yield event.to_sse()
+            except TimeoutError:
+                yield 'data: {"type": "keepalive"}\n\n'
     finally:
         # Unsubscribe
         subs = _subscribers.get(incident_id, [])
@@ -79,6 +82,10 @@ async def stream_pipeline(
     ``thought``, ``agent_start``, ``agent_end``, ``result``, ``error``,
     ``approval``.
     """
+    if len(_subscribers.get(incident_id, [])) >= MAX_SUBSCRIBERS:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=429, detail="Too many active subscribers for this incident stream.")
+
     queue: asyncio.Queue[StreamEvent | None] = asyncio.Queue()
     _subscribers[incident_id].append(queue)
 

@@ -24,15 +24,15 @@ class IncidentKnowledgeBase:
 
     def __init__(self):
         self.mock_db: list[dict[str, Any]] = []
-        global HAS_CHROMA
-        if HAS_CHROMA:
+        self.has_chroma = HAS_CHROMA
+        if self.has_chroma:
             try:
                 # In-memory ephemeral DB for demo purposes
                 self.client = chromadb.Client(Settings(is_tenant_headless=True))
                 self.collection = self.client.get_or_create_collection(name="resolved_incidents")
             except Exception as e:
                 logger.error(f"Failed to initialize ChromaDB: {e}")
-                HAS_CHROMA = False
+                self.has_chroma = False
 
     def index_resolved_incident(self, incident: dict[str, Any], analysis: dict[str, Any]) -> bool:
         """
@@ -55,7 +55,7 @@ class IncidentKnowledgeBase:
             "engineer": incident.get("owner", "System"),
         }
 
-        if HAS_CHROMA:
+        if self.has_chroma:
             try:
                 self.collection.add(documents=[document], metadatas=[metadata], ids=[doc_id])
                 logger.info(f"Indexed incident {doc_id} into ChromaDB")
@@ -72,7 +72,7 @@ class IncidentKnowledgeBase:
         """
         Searches the KB for similar past incidents.
         """
-        if HAS_CHROMA:
+        if self.has_chroma:
             try:
                 results = self.collection.query(query_texts=[query], n_results=n_results)
 

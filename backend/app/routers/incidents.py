@@ -152,6 +152,7 @@ def approve_incident(
     db: Session = Depends(get_db),
     _user: User = Depends(require_role("owner", "admin", "incident_commander", "automation")),
 ) -> dict[str, Any]:
+    payload.actor = _user.name
     result = svc.approve(db, _user.workspace_id, incident_id, payload)
     if not result:
         raise _not_found(incident_id)
@@ -181,6 +182,7 @@ def resolve_incident(
     db: Session = Depends(get_db),
     _user: User = Depends(require_role("owner", "admin", "incident_commander", "automation")),
 ) -> IncidentRead:
+    payload.actor = _user.name
     incident = svc.resolve(db, _user.workspace_id, incident_id, payload)
     if not incident:
         raise _not_found(incident_id)
@@ -208,6 +210,7 @@ def add_comment(
     db: Session = Depends(get_db),
     _user: User = Depends(require_role("owner", "admin", "incident_commander", "responder", "sme", "automation")),
 ) -> IncidentLogRead:
+    payload.actor = _user.name
     log = svc.add_comment(db, _user.workspace_id, incident_id, payload.content, payload.actor)
     if not log:
         raise _not_found(incident_id)

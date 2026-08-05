@@ -21,8 +21,7 @@ export function TimelineComments({ incidentId }: { incidentId: string }) {
     setError(null);
 
     try {
-      const actor = user?.name || "Maya Chen";
-      const success = await addComment(incidentId, comment, actor);
+      const success = await addComment(incidentId, comment);
       if (success) {
         setComment("");
         // Refresh the page to load new timeline events

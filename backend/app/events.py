@@ -158,6 +158,16 @@ def truncate_dict(d: dict[str, Any], max_str_len: int = 500) -> dict[str, Any]:
             result[k] = v[:max_str_len] + "..."
         elif isinstance(v, dict):
             result[k] = truncate_dict(v, max_str_len)
+        elif isinstance(v, list):
+            new_list = []
+            for item in v:
+                if isinstance(item, str) and len(item) > max_str_len:
+                    new_list.append(item[:max_str_len] + "...")
+                elif isinstance(item, dict):
+                    new_list.append(truncate_dict(item, max_str_len))
+                else:
+                    new_list.append(item)
+            result[k] = new_list
         else:
             result[k] = v
     return result

@@ -230,8 +230,6 @@ def enrich_incident(
     if severity_order.get(calculated_severity, 4) < severity_order.get(incident.severity, 4):
         incident.severity = calculated_severity
 
-    db.commit()
-
     return {
         "classifications": classifications,
         "calculated_severity": calculated_severity,

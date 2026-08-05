@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import time
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.database import get_db
 from app.middleware.auth import get_current_user
 from app.models.user import User
@@ -41,6 +41,7 @@ def signup(req: SignupRequest, db: Session = Depends(get_db)) -> LoginResponse:
 
     return LoginResponse(
         access_token=token,
+        expires_in=settings.access_token_expire_minutes * 60,
         user=UserRead(
             id=new_user.id,
             name=new_user.name,
@@ -63,10 +64,11 @@ def login(req: LoginRequest, db: Session = Depends(get_db)) -> LoginResponse:
     elif not user.hashed_password or not verify_password(req.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
-    token = create_access_token({"sub": user.id, "email": user.email, "role": user.role, "exp": int(time.time()) + 28800})
+    token = create_access_token({"sub": user.id, "email": user.email, "role": user.role})
 
     return LoginResponse(
         access_token=token,
+        expires_in=settings.access_token_expire_minutes * 60,
         user=UserRead(
             id=user.id,
             name=user.name,

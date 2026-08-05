@@ -7,6 +7,7 @@ from typing import Any
 from uuid import uuid4
 
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.models.audit_log import AuditLog
 from app.models.incident import Incident
@@ -71,6 +72,15 @@ def _add_audit(
     return audit
 
 
+
+def _get_incident(db: Session, workspace_id: str, incident_id: str):
+    return (
+        db.query(Incident)
+        .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
+        .first()
+    )
+
+
 # ── List / Read ────────────────────────────────────────────────────────
 
 
@@ -100,20 +110,12 @@ def list_incidents(
 
 
 def get_incident(db: Session, workspace_id: str, incident_id: str) -> dict[str, Any] | None:
-    row = (
-        db.query(Incident)
-        .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
-        .first()
-    )
+    row = _get_incident(db, workspace_id, incident_id)
     return row.to_dict() if row else None
 
 
 def get_detail(db: Session, workspace_id: str, incident_id: str) -> dict[str, Any] | None:
-    incident = (
-        db.query(Incident)
-        .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
-        .first()
-    )
+    incident = _get_incident(db, workspace_id, incident_id)
     if not incident:
         return None
     real_id = incident.id
@@ -142,13 +144,26 @@ def get_detail(db: Session, workspace_id: str, incident_id: str) -> dict[str, An
 # ── Create ─────────────────────────────────────────────────────────────
 
 
-def create_incident(db: Session, workspace_id: str, request: IncidentCreate, actor: str = "Maya Chen") -> dict[str, Any]:
+def create_incident(db: Session, workspace_id: str, request: IncidentCreate, actor: str) -> dict[str, Any]:
     now = _utcnow()
-    count = db.query(Incident).filter(Incident.workspace_id == workspace_id).count()
+    
+    max_inc = db.query(func.max(Incident.incident_number)).filter(
+        Incident.workspace_id == workspace_id,
+        Incident.incident_number.like(f"INC-{now.year}-%")
+    ).scalar()
+    
+    if max_inc:
+        try:
+            next_num = int(max_inc.split("-")[-1]) + 1
+        except ValueError:
+            next_num = 1
+    else:
+        next_num = 1
+        
     incident = Incident(
         id=f"inc_{_uid()}",
         workspace_id=workspace_id,
-        incident_number=f"INC-{now.year}-{count + 38:03d}",
+        incident_number=f"INC-{now.year}-{next_num:03d}",
         title=request.title,
         description=request.description,
         service=request.service,
@@ -177,13 +192,9 @@ def create_incident(db: Session, workspace_id: str, request: IncidentCreate, act
 
 
 def update_incident(
-    db: Session, workspace_id: str, incident_id: str, request: IncidentUpdate, actor: str = "Maya Chen"
+    db: Session, workspace_id: str, incident_id: str, request: IncidentUpdate, actor: str
 ) -> dict[str, Any] | None:
-    incident = (
-        db.query(Incident)
-        .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
-        .first()
-    )
+    incident = _get_incident(db, workspace_id, incident_id)
     if not incident:
         return None
     real_id = incident.id
@@ -211,12 +222,8 @@ def update_incident(
 # ── Comments ───────────────────────────────────────────────────────────
 
 
-def add_comment(db: Session, workspace_id: str, incident_id: str, comment_text: str, actor: str = "Maya Chen") -> dict[str, Any] | None:
-    incident = (
-        db.query(Incident)
-        .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
-        .first()
-    )
+def add_comment(db: Session, workspace_id: str, incident_id: str, comment_text: str, actor: str) -> dict[str, Any] | None:
+    incident = _get_incident(db, workspace_id, incident_id)
     if not incident:
         return None
 
@@ -233,11 +240,7 @@ def add_comment(db: Session, workspace_id: str, incident_id: str, comment_text: 
 
 
 def approve(db: Session, workspace_id: str, incident_id: str, request: ApprovalRequest) -> tuple[dict, dict] | None:
-    incident = (
-        db.query(Incident)
-        .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
-        .first()
-    )
+    incident = _get_incident(db, workspace_id, incident_id)
     if not incident:
         return None
     real_id = incident.id
@@ -293,11 +296,7 @@ def approve(db: Session, workspace_id: str, incident_id: str, request: ApprovalR
 
 
 def resolve(db: Session, workspace_id: str, incident_id: str, request: ResolutionRequest) -> dict[str, Any] | None:
-    incident = (
-        db.query(Incident)
-        .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
-        .first()
-    )
+    incident = _get_incident(db, workspace_id, incident_id)
     if not incident:
         return None
     real_id = incident.id
@@ -328,16 +327,18 @@ def resolve(db: Session, workspace_id: str, incident_id: str, request: Resolutio
 # ── Delete ─────────────────────────────────────────────────────────────
 
 
-def delete_incident(db: Session, workspace_id: str, incident_id: str, actor: str = "Maya Chen") -> bool:
-    incident = (
-        db.query(Incident)
-        .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
-        .first()
-    )
+def delete_incident(db: Session, workspace_id: str, incident_id: str, actor: str) -> bool:
+    incident = _get_incident(db, workspace_id, incident_id)
     if not incident:
         return False
-    _add_audit(db, "incident", incident.id, "incident.deleted", actor, f"Deleted {incident.incident_number}.")
+    
+    # Capture values before delete
+    inc_id = incident.id
+    inc_num = incident.incident_number
+    
     db.delete(incident)
+    # Write audit log after delete
+    _add_audit(db, "incident", inc_id, "incident.deleted", actor, f"Deleted {inc_num}.")
     db.commit()
     return True
 
@@ -346,11 +347,7 @@ def delete_incident(db: Session, workspace_id: str, incident_id: str, actor: str
 
 
 def get_incident_logs(db: Session, workspace_id: str, incident_id: str) -> list[dict[str, Any]] | None:
-    incident = (
-        db.query(Incident)
-        .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
-        .first()
-    )
+    incident = _get_incident(db, workspace_id, incident_id)
     if not incident:
         return None
     real_id = incident.id
@@ -364,20 +361,24 @@ def get_incident_logs(db: Session, workspace_id: str, incident_id: str) -> list[
 def audit_logs(db: Session, workspace_id: str, incident_id: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
     q = db.query(AuditLog)
     if incident_id:
-        incident = (
-            db.query(Incident)
-            .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
-            .first()
-        )
+        incident = _get_incident(db, workspace_id, incident_id)
         if not incident:
             return []
         real_id = incident.id
         q = q.filter((AuditLog.entity_id == real_id) | (AuditLog.metadata_raw.contains(real_id)))
     else:
         # If no incident_id is provided, we should only return audit logs for incidents in this workspace.
-        # As a simplified approach for now, we just join.
         incident_ids = [row[0] for row in db.query(Incident.id).filter(Incident.workspace_id == workspace_id).all()]
-        q = q.filter(AuditLog.entity_id.in_(incident_ids))
+        
+        from sqlalchemy import or_
+        filters = [AuditLog.entity_id.in_(incident_ids)]
+        for i_id in incident_ids:
+            filters.append(AuditLog.metadata_raw.contains(i_id))
+        
+        if filters:
+            q = q.filter(or_(*filters))
+        else:
+            return []
 
     rows = q.order_by(AuditLog.created_at.desc()).limit(limit).all()
     return [r.to_dict() for r in rows]
@@ -390,12 +391,7 @@ def get_notifications(db: Session, workspace_id: str, incident_id: str) -> dict[
     """Return Slack messages and Jira tickets linked to an incident."""
     from app.models.jira_sync import JiraSync
     from app.models.slack_message import SlackMessage
-
-    incident = (
-        db.query(Incident)
-        .filter(Incident.workspace_id == workspace_id, (Incident.id == incident_id) | (Incident.incident_number == incident_id))
-        .first()
-    )
+    incident = _get_incident(db, workspace_id, incident_id)
     if not incident:
         return None
     real_id = incident.id

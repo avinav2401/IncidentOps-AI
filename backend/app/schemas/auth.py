@@ -29,7 +29,7 @@ class SignupRequest(BaseModel):
 class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
-    expires_in: int = 28_800
+    expires_in: int
     user: UserRead
 
 

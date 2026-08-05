@@ -28,7 +28,9 @@ export function MultiAgentProgress({ incidentId, incidentStatus, onComplete }: {
     if (incidentStatus === "investigating") {
       // Connect to SSE stream
       const token = localStorage.getItem("incidentops_token"); // Simple auth for demo
-      const url = new URL(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/incidents/${incidentId}/stream`);
+      const baseUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/incidents/${incidentId}/stream`;
+      const url = new URL(baseUrl);
+      if (token) url.searchParams.append("token_query", token);
       
       const eventSource = new EventSource(url);
 

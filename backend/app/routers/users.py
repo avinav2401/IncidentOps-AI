@@ -62,13 +62,15 @@ def invite_user(
 
     avatar_initials = "".join([part[0].upper() for part in req.name.split() if part])[:2]
 
-    # Default password for invited users is "demo123" (since there is no email integration yet)
+    import secrets
+    temp_password = secrets.token_urlsafe(10)
+
     new_user = User(
         id=str(uuid.uuid4()),
         workspace_id=current_user.workspace_id,
         name=req.name,
         email=req.email,
-        hashed_password=get_password_hash("demo123"),
+        hashed_password=get_password_hash(temp_password),
         role=req.role,
         avatar_initials=avatar_initials,
     )

@@ -13,6 +13,18 @@ async def verify_fix(service: str) -> dict:
     """
     await asyncio.sleep(1.0)  # Simulate health check delay
 
+    import random
+    if random.random() < 0.10:
+        return {
+            "health": "Failing",
+            "cpu": "95%",
+            "memory": "85%",
+            "latency": "5000ms",
+            "error_rate": "100%",
+            "status": "DOWN",
+            "details": "Health endpoints timing out. Remediation failed to restore service.",
+        }
+
     return {
         "health": "Healthy",
         "cpu": "18%",

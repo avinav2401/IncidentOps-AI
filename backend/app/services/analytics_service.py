@@ -48,6 +48,27 @@ def compute_analytics(db: Session, workspace_id: str) -> dict[str, Any]:
             if dt >= now - timedelta(days=7):
                 created_this_week += 1
 
+    # Compute real trend data for the past 7 days
+    trend = []
+    for i in range(6, -1, -1):
+        day_start = now.replace(hour=0, minute=0, second=0) - timedelta(days=i)
+        day_end = day_start + timedelta(days=1)
+        
+        opened_count = 0
+        resolved_count = 0
+        
+        for inc in incidents:
+            inc_created = inc.created_at.replace(tzinfo=UTC) if inc.created_at and inc.created_at.tzinfo is None else inc.created_at
+            inc_resolved = inc.resolved_at.replace(tzinfo=UTC) if inc.resolved_at and inc.resolved_at.tzinfo is None else inc.resolved_at
+            
+            if inc_created and day_start <= inc_created < day_end:
+                opened_count += 1
+            if inc_resolved and day_start <= inc_resolved < day_end:
+                resolved_count += 1
+                
+        label = day_start.strftime("%a") if i > 0 else "Today"
+        trend.append({"label": label, "opened": opened_count, "resolved": resolved_count})
+
     return {
         "overview": {
             "total_incidents": len(incidents),
@@ -60,12 +81,5 @@ def compute_analytics(db: Session, workspace_id: str) -> dict[str, Any]:
         },
         "by_status": statuses,
         "by_severity": severities,
-        "trend": [
-            {"label": "Mon", "opened": 2, "resolved": 1},
-            {"label": "Tue", "opened": 1, "resolved": 2},
-            {"label": "Wed", "opened": 3, "resolved": 2},
-            {"label": "Thu", "opened": 2, "resolved": 2},
-            {"label": "Fri", "opened": 1, "resolved": 1},
-            {"label": "Today", "opened": active, "resolved": 0},
-        ],
+        "trend": trend,
     }

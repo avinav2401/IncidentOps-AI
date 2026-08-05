@@ -108,6 +108,8 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T | 
           // Token expired or invalid
           removeToken();
           // Optionally trigger a logout event here or redirect
+        } else {
+          console.warn(`API error at ${endpoint}: ${response.status} ${response.statusText}`);
         }
         continue;
       }
@@ -122,7 +124,7 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T | 
 import { supabase } from "./supabase";
 
 export async function login(email: string, password: string): Promise<AuthResponse> {
-  const url = apiBase ? `${apiBase}/login` : "";
+  const url = apiBase ? `${apiBase}/auth/login` : "";
   if (url) {
     try {
       const response = await fetch(url, {
@@ -183,35 +185,27 @@ export async function getMe(): Promise<User | null> {
 // --- Incident Endpoints ---
 
 export async function fetchAuditHistory(): Promise<AuditEvent[]> {
-  const res = await fetch(`${apiBase}/audit/history`, {
-    headers: { Authorization: `Bearer ${getToken()}` },
-  });
-  if (!res.ok) throw new Error("Failed to fetch audit history");
-  return res.json();
+  const res = await request<AuditEvent[]>("/audit/history");
+  if (!res) throw new Error("Failed to fetch audit history");
+  return res;
 }
 
 export async function fetchKnowledgeIncidents(): Promise<IncidentKnowledge[]> {
-  const res = await fetch(`${apiBase}/knowledge/incidents`, {
-    headers: { Authorization: `Bearer ${getToken()}` },
-  });
-  if (!res.ok) throw new Error("Failed to fetch knowledge base incidents");
-  return res.json();
+  const res = await request<IncidentKnowledge[]>("/knowledge/incidents");
+  if (!res) throw new Error("Failed to fetch knowledge base incidents");
+  return res;
 }
 
 export async function fetchRunbooks(): Promise<Runbook[]> {
-  const res = await fetch(`${apiBase}/knowledge/runbooks`, {
-    headers: { Authorization: `Bearer ${getToken()}` },
-  });
-  if (!res.ok) throw new Error("Failed to fetch runbooks");
-  return res.json();
+  const res = await request<Runbook[]>("/knowledge/runbooks");
+  if (!res) throw new Error("Failed to fetch runbooks");
+  return res;
 }
 
 export async function fetchPostmortemReport(incidentId: string): Promise<PostmortemReport> {
-  const res = await fetch(`${apiBase}/reports/${incidentId}/json`, {
-    headers: { Authorization: `Bearer ${getToken()}` },
-  });
-  if (!res.ok) throw new Error("Failed to fetch report");
-  return res.json();
+  const res = await request<PostmortemReport>(`/reports/${incidentId}/json`);
+  if (!res) throw new Error("Failed to fetch report");
+  return res;
 }
 
 
@@ -317,8 +311,7 @@ export async function fetchIncident(id: string): Promise<Incident | null> {
         estimatedRecovery: "5m"
       },
       evidenceChain: rec.evidence_chain || [],
-      similarIncidents: rec.similar_incidents || [],
-      modelComparisons: rec.model_comparisons || []
+      similarIncidents: rec.similar_incidents || []
     } : null,
     auditHistory: remote.audit_logs?.map((a: any) => ({
       time: formatDate(a.created_at),
@@ -379,8 +372,8 @@ export async function fetchAnalytics(): Promise<any> {
   return remote || {};
 }
 
-export async function addComment(id: string, content: string, actor: string = "Maya Chen"): Promise<boolean> {
-  const payload = { content, actor };
+export async function addComment(id: string, content: string): Promise<boolean> {
+  const payload = { content };
   const remote = await request<any>(`/incidents/${id}/comments`, {
     method: "POST",
     body: JSON.stringify(payload)

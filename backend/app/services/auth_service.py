@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import bcrypt
+from datetime import UTC, datetime, timedelta
+
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
@@ -39,6 +41,9 @@ def decode_access_token(token: str) -> dict | None:
 def create_access_token(data: dict) -> str:
     """Create a new JWT access token."""
     to_encode = data.copy()
+    if "exp" not in to_encode:
+        expire = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
+        to_encode["exp"] = expire
     encoded_jwt = jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
     return encoded_jwt
 

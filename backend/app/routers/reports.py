@@ -9,10 +9,16 @@ from app.models.incident import Incident
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
 
+from app.middleware.auth import get_current_user
+from app.models.user import User
+
 @router.get("/{incident_id}/json")
-async def get_report_json(incident_id: str, db: Session = Depends(get_db)):
+async def get_report_json(incident_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Generate and return the postmortem report as JSON."""
-    incident = db.query(Incident).filter(Incident.id == incident_id).first()
+    incident = db.query(Incident).filter(
+        Incident.id == incident_id,
+        Incident.workspace_id == current_user.workspace_id
+    ).first()
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
 
@@ -20,9 +26,12 @@ async def get_report_json(incident_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/{incident_id}/markdown", response_class=PlainTextResponse)
-async def get_report_markdown(incident_id: str, db: Session = Depends(get_db)):
+async def get_report_markdown(incident_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Generate and return the postmortem report as Markdown."""
-    incident = db.query(Incident).filter(Incident.id == incident_id).first()
+    incident = db.query(Incident).filter(
+        Incident.id == incident_id,
+        Incident.workspace_id == current_user.workspace_id
+    ).first()
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
 

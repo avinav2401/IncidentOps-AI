@@ -93,7 +93,7 @@ async def run_post_approval_pipeline(
 
         # Compute duration string
         if incident.created_at:
-            diff = now - incident.created_at.replace(tzinfo=None) if incident.created_at.tzinfo is None else now - incident.created_at
+            diff = (now - incident.created_at.replace(tzinfo=None)) if incident.created_at.tzinfo is None else (now - incident.created_at)
             diff_min = int(abs(diff.total_seconds()) / 60)
             duration_str = f"{diff_min} minutes"
         else:

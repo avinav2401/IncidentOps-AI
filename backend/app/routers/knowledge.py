@@ -27,10 +27,16 @@ class Runbook(BaseModel):
     steps: list[str]
 
 
+from app.middleware.auth import get_current_user
+from app.models.user import User
+
 @router.get("/incidents", response_model=list[IncidentKnowledge])
-def get_knowledge_incidents(db: Session = Depends(get_db)):
+def get_knowledge_incidents(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Return resolved incidents with their root cause and resolution for the Knowledge Base."""
-    resolved_incidents = db.query(Incident).filter(Incident.status == "Resolved").all()
+    resolved_incidents = db.query(Incident).filter(
+        Incident.status == "Resolved",
+        Incident.workspace_id == current_user.workspace_id
+    ).all()
 
     knowledge_list = []
     for inc in resolved_incidents:

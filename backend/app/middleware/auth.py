@@ -55,14 +55,19 @@ def _try_demo_token(token: str, db: Session) -> User | None:
 
 
 async def get_current_user(
+    token_query: str | None = None,
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
     db: Session = Depends(get_db),
 ) -> User:
     """Resolve the current user from the ``Authorization: Bearer <token>``
-    header.  In demo mode, requests without a token are served as the
-    default incident commander."""
+    header or ``?token=`` query parameter (for SSE). In demo mode, 
+    requests without a token are served as the default incident commander."""
+    
+    token = token_query
     if credentials and credentials.credentials:
         token = credentials.credentials
+
+    if token:
 
         # Try real JWT first.
         payload = decode_access_token(token)

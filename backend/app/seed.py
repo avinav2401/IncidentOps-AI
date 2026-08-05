@@ -11,6 +11,7 @@ from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
+from app.middleware.auth import get_password_hash
 from app.models.agent_status import AgentStatus
 from app.models.audit_log import AuditLog
 from app.models.incident import Incident
@@ -49,12 +50,14 @@ def seed_database(db: Session) -> None:
     db.add(workspace)
 
     # ── Users ──────────────────────────────────────────────────────────
+    demo_password_hash = get_password_hash("demo123")
     users = [
         User(
             id="usr_maya",
             workspace_id="ws_demo",
             name="Maya Chen",
             email="maya.chen@incidentops.dev",
+            hashed_password=demo_password_hash,
             role="incident_commander",
             avatar_initials="MC",
         ),
@@ -63,11 +66,18 @@ def seed_database(db: Session) -> None:
             workspace_id="ws_demo",
             name="Samir Patel",
             email="samir.patel@incidentops.dev",
+            hashed_password=demo_password_hash,
             role="responder",
             avatar_initials="SP",
         ),
         User(
-            id="usr_lena", workspace_id="ws_demo", name="Lena Ortiz", email="lena.ortiz@incidentops.dev", role="admin", avatar_initials="LO"
+            id="usr_lena",
+            workspace_id="ws_demo",
+            name="Lena Ortiz",
+            email="lena.ortiz@incidentops.dev",
+            hashed_password=demo_password_hash,
+            role="admin",
+            avatar_initials="LO"
         ),
     ]
     db.add_all(users)

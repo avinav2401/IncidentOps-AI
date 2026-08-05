@@ -69,7 +69,7 @@ def verify_slack_signature(
     signing_secret: str,
     timestamp: str | None,
     signature: str | None,
-    raw_body: str,
+    raw_body: bytes,
     max_age_seconds: int = 300,
 ) -> None:
     """Verify a Slack webhook request signature.
@@ -82,7 +82,7 @@ def verify_slack_signature(
         signing_secret: Slack app signing secret.
         timestamp: ``X-Slack-Request-Timestamp`` header.
         signature: ``X-Slack-Signature`` header.
-        raw_body: Raw request body as string.
+        raw_body: Raw request body as bytes.
         max_age_seconds: Max age of request (default 5 minutes).
 
     Raises:
@@ -105,7 +105,12 @@ def verify_slack_signature(
     if age > max_age_seconds:
         raise SignatureVerificationError(f"request_too_old ({age:.0f}s > {max_age_seconds}s)", "slack")
 
-    base_string = f"v0:{timestamp}:{raw_body}"
+    try:
+        body_str = raw_body.decode("utf-8")
+    except UnicodeDecodeError:
+        raise SignatureVerificationError("invalid_body_encoding", "slack")
+
+    base_string = f"v0:{timestamp}:{body_str}"
     computed = (
         "v0="
         + hmac.new(
