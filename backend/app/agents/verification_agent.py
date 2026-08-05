@@ -14,6 +14,7 @@ async def verify_fix(service: str) -> dict:
     await asyncio.sleep(1.0)  # Simulate health check delay
 
     import random
+
     if random.random() < 0.10:
         return {
             "health": "Failing",

@@ -84,6 +84,7 @@ async def stream_pipeline(
     """
     if len(_subscribers.get(incident_id, [])) >= MAX_SUBSCRIBERS:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=429, detail="Too many active subscribers for this incident stream.")
 
     queue: asyncio.Queue[StreamEvent | None] = asyncio.Queue()

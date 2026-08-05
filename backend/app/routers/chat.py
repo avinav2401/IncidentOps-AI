@@ -23,15 +23,12 @@ class ChatResponse(BaseModel):
     time: str
 
 
-
-
 @router.post("/{incident_id}")
-async def chat_with_ai(incident_id: str, payload: ChatMessage, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+async def chat_with_ai(
+    incident_id: str, payload: ChatMessage, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+):
     """Conversational interface for an incident."""
-    incident = db.query(Incident).filter(
-        Incident.id == incident_id,
-        Incident.workspace_id == current_user.workspace_id
-    ).first()
+    incident = db.query(Incident).filter(Incident.id == incident_id, Incident.workspace_id == current_user.workspace_id).first()
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
 

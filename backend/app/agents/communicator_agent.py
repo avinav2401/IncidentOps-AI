@@ -53,6 +53,7 @@ async def create_jira_ticket(
 ) -> dict:
     """Create a Jira ticket record for the post-incident bug."""
     import random
+
     issue_id = random.randint(1000, 9999)
     sync = JiraSync(
         id=f"jira_sync_{_uid()}",

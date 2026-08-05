@@ -165,9 +165,13 @@ async def run_pipeline(incident_id: str) -> None:
                 start_time = time.monotonic()
                 res = await fetch_metrics(incident.service, scenario_data)
                 dur = time.monotonic() - start_time
-                _add_incident_log(task_db, incident_id, f"Metrics: CPU {res['cpu']}, Mem {res['memory']}, Latency {res['latency']}", agent_name)
+                _add_incident_log(
+                    task_db, incident_id, f"Metrics: CPU {res['cpu']}, Mem {res['memory']}, Latency {res['latency']}", agent_name
+                )
                 _update_agent_status(task_db, agent_name, "Idle")
-                publish(agent_end_event(incident_id, agent_name, summary=f"CPU: {res['cpu']}, Latency: {res['latency']}", duration_seconds=dur))
+                publish(
+                    agent_end_event(incident_id, agent_name, summary=f"CPU: {res['cpu']}, Latency: {res['latency']}", duration_seconds=dur)
+                )
                 return res
 
         async def run_logs():

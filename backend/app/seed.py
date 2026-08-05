@@ -77,7 +77,7 @@ def seed_database(db: Session) -> None:
             email="lena.ortiz@incidentops.dev",
             hashed_password=demo_password_hash,
             role="admin",
-            avatar_initials="LO"
+            avatar_initials="LO",
         ),
     ]
     db.add_all(users)

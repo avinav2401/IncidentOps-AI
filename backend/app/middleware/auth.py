@@ -68,7 +68,6 @@ async def get_current_user(
         token = credentials.credentials
 
     if token:
-
         # Try real JWT first.
         payload = decode_access_token(token)
         if payload:

@@ -16,7 +16,10 @@ def _get_incident(db: Session, workspace_id: str, incident_id: str):
     )
 """
 
-content = content.replace("# ── List / Read ────────────────────────────────────────────────────────", helper + "\n\n# ── List / Read ────────────────────────────────────────────────────────")
+content = content.replace(
+    "# ── List / Read ────────────────────────────────────────────────────────",
+    helper + "\n\n# ── List / Read ────────────────────────────────────────────────────────",
+)
 
 # 2. Replace the duplicated lookup
 lookup_pattern = r"""\s*incident\s*=\s*\(\s*db\.query\(Incident\)\s*\.filter\(Incident\.workspace_id == workspace_id,\s*\(Incident\.id == incident_id\) \| \(Incident\.incident_number == incident_id\)\)\s*\.first\(\)\s*\)"""
@@ -95,7 +98,7 @@ audit_new = """        # If no incident_id is provided, we should only return au
 content = content.replace(audit_old, audit_new)
 
 # 6. Remove actor default values
-content = content.replace('actor: str = "Maya Chen"', 'actor: str')
+content = content.replace('actor: str = "Maya Chen"', "actor: str")
 
 with open(path, "w", encoding="utf-8") as f:
     f.write(content)

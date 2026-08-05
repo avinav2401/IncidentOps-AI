@@ -72,7 +72,6 @@ def _add_audit(
     return audit
 
 
-
 def _get_incident(db: Session, workspace_id: str, incident_id: str):
     return (
         db.query(Incident)
@@ -147,10 +146,11 @@ def get_detail(db: Session, workspace_id: str, incident_id: str) -> dict[str, An
 def create_incident(db: Session, workspace_id: str, request: IncidentCreate, actor: str) -> dict[str, Any]:
     now = _utcnow()
 
-    max_inc = db.query(func.max(Incident.incident_number)).filter(
-        Incident.workspace_id == workspace_id,
-        Incident.incident_number.like(f"INC-{now.year}-%")
-    ).scalar()
+    max_inc = (
+        db.query(func.max(Incident.incident_number))
+        .filter(Incident.workspace_id == workspace_id, Incident.incident_number.like(f"INC-{now.year}-%"))
+        .scalar()
+    )
 
     if max_inc:
         try:
@@ -191,9 +191,7 @@ def create_incident(db: Session, workspace_id: str, request: IncidentCreate, act
 # ── Update ─────────────────────────────────────────────────────────────
 
 
-def update_incident(
-    db: Session, workspace_id: str, incident_id: str, request: IncidentUpdate, actor: str
-) -> dict[str, Any] | None:
+def update_incident(db: Session, workspace_id: str, incident_id: str, request: IncidentUpdate, actor: str) -> dict[str, Any] | None:
     incident = _get_incident(db, workspace_id, incident_id)
     if not incident:
         return None
@@ -371,6 +369,7 @@ def audit_logs(db: Session, workspace_id: str, incident_id: str | None = None, l
         incident_ids = [row[0] for row in db.query(Incident.id).filter(Incident.workspace_id == workspace_id).all()]
 
         from sqlalchemy import or_
+
         filters = [AuditLog.entity_id.in_(incident_ids)]
         for i_id in incident_ids:
             filters.append(AuditLog.metadata_raw.contains(i_id))
@@ -391,6 +390,7 @@ def get_notifications(db: Session, workspace_id: str, incident_id: str) -> dict[
     """Return Slack messages and Jira tickets linked to an incident."""
     from app.models.jira_sync import JiraSync
     from app.models.slack_message import SlackMessage
+
     incident = _get_incident(db, workspace_id, incident_id)
     if not incident:
         return None

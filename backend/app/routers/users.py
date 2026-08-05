@@ -63,6 +63,7 @@ def invite_user(
     avatar_initials = "".join([part[0].upper() for part in req.name.split() if part])[:2]
 
     import secrets
+
     temp_password = secrets.token_urlsafe(10)
 
     new_user = User(

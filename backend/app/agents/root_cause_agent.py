@@ -10,6 +10,7 @@ async def determine_root_cause(
     Uses an LLM to synthesize logs, commits, monitor status, and metrics into a root cause hypothesis.
     """
     import json
+
     commits_str = "\n".join(commits)
     context_str = json.dumps(knowledge_context, indent=2) if knowledge_context else "[]"
     prompt = (

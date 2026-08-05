@@ -33,6 +33,7 @@ class ReportAgent:
             end_time = incident.resolved_at
             if not end_time:
                 from datetime import UTC, datetime
+
                 end_time = datetime.now(UTC)
 
             delta = end_time - incident.created_at
