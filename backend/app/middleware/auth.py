@@ -60,9 +60,9 @@ async def get_current_user(
     db: Session = Depends(get_db),
 ) -> User:
     """Resolve the current user from the ``Authorization: Bearer <token>``
-    header or ``?token=`` query parameter (for SSE). In demo mode, 
+    header or ``?token=`` query parameter (for SSE). In demo mode,
     requests without a token are served as the default incident commander."""
-    
+
     token = token_query
     if credentials and credentials.credentials:
         token = credentials.credentials

@@ -7,6 +7,7 @@ Architecture inspired by IncidentFox's production agent pipeline.
 
 from __future__ import annotations
 
+import collections
 import json
 import logging
 import time
@@ -58,7 +59,6 @@ def _structured_log(event: str, **fields: Any) -> None:
 # Stores scenario data injected by the simulator so the orchestrator can
 # pass realistic evidence to each agent during the pipeline run.
 
-import collections
 _scenario_cache: collections.OrderedDict[str, dict] = collections.OrderedDict()
 
 

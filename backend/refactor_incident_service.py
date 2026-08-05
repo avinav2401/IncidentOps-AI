@@ -1,8 +1,7 @@
 import re
-import os
 
 path = r"C:\Users\avina\OneDrive\Desktop\ai\backend\app\services\incident_service.py"
-with open(path, "r", encoding="utf-8") as f:
+with open(path, encoding="utf-8") as f:
     content = f.read()
 
 # 1. Add _get_incident helper and import func
@@ -35,11 +34,11 @@ delete_old = """    if not incident:
 
 delete_new = """    if not incident:
         return False
-    
+
     # Capture values before delete
     inc_id = incident.id
     inc_num = incident.incident_number
-    
+
     db.delete(incident)
     # Write audit log after delete
     _add_audit(db, "incident", inc_id, "incident.deleted", actor, f"Deleted {inc_num}.")
@@ -55,12 +54,12 @@ create_old = """    now = _utcnow()
         incident_number=f"INC-{now.year}-{count + 38:03d}","""
 
 create_new = """    now = _utcnow()
-    
+
     max_inc = db.query(func.max(Incident.incident_number)).filter(
         Incident.workspace_id == workspace_id,
         Incident.incident_number.like(f"INC-{now.year}-%")
     ).scalar()
-    
+
     if max_inc:
         try:
             next_num = int(max_inc.split("-")[-1]) + 1
@@ -68,7 +67,7 @@ create_new = """    now = _utcnow()
             next_num = 1
     else:
         next_num = 1
-        
+
     incident = Incident(
         id=f"inc_{_uid()}",
         workspace_id=workspace_id,
@@ -83,12 +82,12 @@ audit_old = """        # If no incident_id is provided, we should only return au
 
 audit_new = """        # If no incident_id is provided, we should only return audit logs for incidents in this workspace.
         incident_ids = [row[0] for row in db.query(Incident.id).filter(Incident.workspace_id == workspace_id).all()]
-        
+
         from sqlalchemy import or_
         filters = [AuditLog.entity_id.in_(incident_ids)]
         for i_id in incident_ids:
             filters.append(AuditLog.metadata_raw.contains(i_id))
-        
+
         if filters:
             q = q.filter(or_(*filters))
         else:

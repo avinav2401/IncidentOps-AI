@@ -53,19 +53,19 @@ def compute_analytics(db: Session, workspace_id: str) -> dict[str, Any]:
     for i in range(6, -1, -1):
         day_start = now.replace(hour=0, minute=0, second=0) - timedelta(days=i)
         day_end = day_start + timedelta(days=1)
-        
+
         opened_count = 0
         resolved_count = 0
-        
+
         for inc in incidents:
             inc_created = inc.created_at.replace(tzinfo=UTC) if inc.created_at and inc.created_at.tzinfo is None else inc.created_at
             inc_resolved = inc.resolved_at.replace(tzinfo=UTC) if inc.resolved_at and inc.resolved_at.tzinfo is None else inc.resolved_at
-            
+
             if inc_created and day_start <= inc_created < day_end:
                 opened_count += 1
             if inc_resolved and day_start <= inc_resolved < day_end:
                 resolved_count += 1
-                
+
         label = day_start.strftime("%a") if i > 0 else "Today"
         trend.append({"label": label, "opened": opened_count, "resolved": resolved_count})
 

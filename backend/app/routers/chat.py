@@ -7,7 +7,9 @@ from sqlalchemy.orm import Session
 
 from app.agents.llm import call_llm
 from app.database import get_db
+from app.middleware.auth import get_current_user
 from app.models.incident import Incident
+from app.models.user import User
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -21,8 +23,7 @@ class ChatResponse(BaseModel):
     time: str
 
 
-from app.middleware.auth import get_current_user
-from app.models.user import User
+
 
 @router.post("/{incident_id}")
 async def chat_with_ai(incident_id: str, payload: ChatMessage, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

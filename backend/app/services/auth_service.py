@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import bcrypt
 from datetime import UTC, datetime, timedelta
 
+import bcrypt
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 

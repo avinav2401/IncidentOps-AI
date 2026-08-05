@@ -4,13 +4,14 @@ from sqlalchemy.orm import Session
 
 from app.agents.report_agent import ReportAgent
 from app.database import get_db
+from app.middleware.auth import get_current_user
 from app.models.incident import Incident
+from app.models.user import User
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
 
-from app.middleware.auth import get_current_user
-from app.models.user import User
+
 
 @router.get("/{incident_id}/json")
 async def get_report_json(incident_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

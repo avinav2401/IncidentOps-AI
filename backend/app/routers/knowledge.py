@@ -3,8 +3,10 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.middleware.auth import get_current_user
 from app.models.incident import Incident
 from app.models.recommendation import AIRecommendation
+from app.models.user import User
 
 router = APIRouter(prefix="/knowledge", tags=["Knowledge Base"])
 
@@ -27,8 +29,7 @@ class Runbook(BaseModel):
     steps: list[str]
 
 
-from app.middleware.auth import get_current_user
-from app.models.user import User
+
 
 @router.get("/incidents", response_model=list[IncidentKnowledge])
 def get_knowledge_incidents(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

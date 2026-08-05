@@ -6,8 +6,8 @@ from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
-from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 from app.models.audit_log import AuditLog
 from app.models.incident import Incident
@@ -146,12 +146,12 @@ def get_detail(db: Session, workspace_id: str, incident_id: str) -> dict[str, An
 
 def create_incident(db: Session, workspace_id: str, request: IncidentCreate, actor: str) -> dict[str, Any]:
     now = _utcnow()
-    
+
     max_inc = db.query(func.max(Incident.incident_number)).filter(
         Incident.workspace_id == workspace_id,
         Incident.incident_number.like(f"INC-{now.year}-%")
     ).scalar()
-    
+
     if max_inc:
         try:
             next_num = int(max_inc.split("-")[-1]) + 1
@@ -159,7 +159,7 @@ def create_incident(db: Session, workspace_id: str, request: IncidentCreate, act
             next_num = 1
     else:
         next_num = 1
-        
+
     incident = Incident(
         id=f"inc_{_uid()}",
         workspace_id=workspace_id,
@@ -331,11 +331,11 @@ def delete_incident(db: Session, workspace_id: str, incident_id: str, actor: str
     incident = _get_incident(db, workspace_id, incident_id)
     if not incident:
         return False
-    
+
     # Capture values before delete
     inc_id = incident.id
     inc_num = incident.incident_number
-    
+
     db.delete(incident)
     # Write audit log after delete
     _add_audit(db, "incident", inc_id, "incident.deleted", actor, f"Deleted {inc_num}.")
@@ -369,12 +369,12 @@ def audit_logs(db: Session, workspace_id: str, incident_id: str | None = None, l
     else:
         # If no incident_id is provided, we should only return audit logs for incidents in this workspace.
         incident_ids = [row[0] for row in db.query(Incident.id).filter(Incident.workspace_id == workspace_id).all()]
-        
+
         from sqlalchemy import or_
         filters = [AuditLog.entity_id.in_(incident_ids)]
         for i_id in incident_ids:
             filters.append(AuditLog.metadata_raw.contains(i_id))
-        
+
         if filters:
             q = q.filter(or_(*filters))
         else:

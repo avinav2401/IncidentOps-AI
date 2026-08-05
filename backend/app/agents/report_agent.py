@@ -34,7 +34,7 @@ class ReportAgent:
             if not end_time:
                 from datetime import UTC, datetime
                 end_time = datetime.now(UTC)
-            
+
             delta = end_time - incident.created_at
             minutes = delta.total_seconds() / 60
             duration = f"{int(minutes)} minutes" if incident.resolved_at else f"{int(minutes)} minutes (Ongoing)"
