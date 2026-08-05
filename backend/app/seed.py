@@ -11,7 +11,7 @@ from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
-from app.middleware.auth import get_password_hash
+from app.services.auth_service import get_password_hash
 from app.models.agent_status import AgentStatus
 from app.models.audit_log import AuditLog
 from app.models.incident import Incident
