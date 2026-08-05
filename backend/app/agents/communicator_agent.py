@@ -72,7 +72,9 @@ async def create_jira_ticket(
 ) -> dict:
     """Create a Jira ticket record for the post-incident bug."""
     import random
+
     import httpx
+
     from app.config import settings
 
     project_key = settings.jira_project_key or "INC"
