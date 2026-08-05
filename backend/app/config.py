@@ -85,14 +85,14 @@ class Settings(BaseSettings):
         if self.app_env == "production":
             if self.jwt_secret_key == "change-this-before-production":
                 raise ValueError("JWT_SECRET_KEY must be changed in production!")
-                
+
         # SQLAlchemy 2.0 requires +psycopg for the psycopg3 driver.
         # Render provides plain postgres:// or postgresql:// URLs.
         if self.database_url.startswith("postgres://"):
             self.database_url = self.database_url.replace("postgres://", "postgresql+psycopg://", 1)
         elif self.database_url.startswith("postgresql://"):
             self.database_url = self.database_url.replace("postgresql://", "postgresql+psycopg://", 1)
-            
+
         return self
 
 
