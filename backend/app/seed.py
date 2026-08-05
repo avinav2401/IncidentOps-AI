@@ -11,7 +11,6 @@ from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
-from app.services.auth_service import get_password_hash
 from app.models.agent_status import AgentStatus
 from app.models.audit_log import AuditLog
 from app.models.incident import Incident
@@ -22,6 +21,7 @@ from app.models.service import Service
 from app.models.slack_message import SlackMessage
 from app.models.user import User
 from app.models.workspace import Workspace
+from app.services.auth_service import get_password_hash
 
 
 def _utcnow() -> datetime:
